@@ -59,6 +59,17 @@
 .auth-experience .auth-form input:hover,
 .auth-experience .auth-form select:hover { border-color: rgb(214 244 232 / 0.3); }
 .auth-experience .auth-form input::placeholder { color: var(--auth-muted); }
+@supports (appearance: base-select) {
+  .auth-experience .auth-form select,
+  .auth-experience .auth-form select::picker(select) { appearance: base-select; }
+  .auth-experience .auth-form select::picker-icon { margin-left: 0.75rem; color: var(--auth-mint); }
+  .auth-experience .auth-form select::picker(select) { max-height: min(22rem, calc(100dvh - 2rem)); padding: 0.42rem; overflow-y: auto; overscroll-behavior: contain; border: 1px solid rgb(214 244 232 / 0.2); border-radius: 1rem; background: var(--auth-raised); color: var(--auth-ink); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.48); }
+  .auth-experience .auth-form option { min-height: 3.15rem; padding: 0.8rem 2.7rem 0.8rem 0.78rem; border-radius: 0.7rem; background: transparent; color: var(--auth-secondary); }
+  .auth-experience .auth-form option:hover,
+  .auth-experience .auth-form option:focus { background: rgb(255 255 255 / 0.045); color: var(--auth-ink); }
+  .auth-experience .auth-form option:checked { background: rgb(184 245 210 / 0.1); color: var(--auth-mint); }
+  .auth-experience .auth-form option::checkmark { order: 1; margin-left: auto; color: var(--auth-mint); }
+}
 .auth-experience .auth-form .form-note,
 .auth-experience .auth-form .submit-button { grid-column: 1; }
 .auth-experience .auth-form .submit-button { min-height: 3.2rem; margin-top: 0.25rem; border-radius: 0.8rem; background: var(--auth-mint); box-shadow: 0 1rem 2.2rem rgb(86 218 151 / 0.16); color: #09291d; }

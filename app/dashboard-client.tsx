@@ -61,6 +61,9 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
   const expenseCategories = data.categories.filter((category) => category.kind === "expense");
   const defaultShoppingCategory = expenseCategories.find((category) => category.name.toLowerCase() === "shopping")?.id ?? expenseCategories[0]?.id ?? "";
   const t = (copy: string) => translate(language, copy);
+  const primaryMobileNav = NAV_ITEMS.filter(({ id }) => MOBILE_NAV_IDS.has(id));
+  const currentMobileNav = NAV_ITEMS.find(({ id }) => id === tab)!;
+  const mobileNavItems = MOBILE_NAV_IDS.has(tab) ? primaryMobileNav : [NAV_ITEMS[0], currentMobileNav, NAV_ITEMS[2], NAV_ITEMS[3], NAV_ITEMS[7]];
   const complete = (result: { error?: string }) => { setMessage(result.error ?? t("Saved.")); if (!result.error) router.refresh(); };
   const viewMeta: Record<DashboardTab, { eyebrow: string; title: string }> = {
     overview: { eyebrow: "FINANCIAL POSITION", title: "Your Money, in Motion." },
@@ -187,7 +190,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       <div className="rail-brand"><LaundryMark className="rail-brand-mark" /><span><strong translate="no">Laundry</strong><small>{t("Household Finance")}</small></span></div>
       <button className="rail-household" type="button" onClick={() => setTab("settings")}><span className="household-orb" aria-hidden="true"><ChartDonut weight="duotone" /></span><span className="rail-household-copy"><small>{t("ACTIVE HOUSEHOLD")}</small><strong>{household.name}</strong></span><CaretRight aria-hidden="true" /></button>
       <nav className="rail-nav desktop-rail-nav" aria-label="Finance Workspace">{NAV_ITEMS.map(({ id, label, icon: Icon }) => <button className={tab === id ? "rail-link active" : "rail-link"} type="button" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} key={id}><Icon aria-hidden="true" weight={tab === id ? "fill" : "regular"} /><span>{t(label)}</span>{id === "plans" && data.recurring.length > 0 && <small>{data.recurring.length}</small>}</button>)}</nav>
-      <nav className="mobile-dock-nav" aria-label="Mobile Finance Workspace">{NAV_ITEMS.filter(({ id }) => MOBILE_NAV_IDS.has(id)).map(({ id, label, icon: Icon }) => <button className={tab === id ? "rail-link active" : "rail-link"} type="button" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} key={id}><Icon aria-hidden="true" weight={tab === id ? "fill" : "regular"} /><span>{t(label)}</span></button>)}</nav>
+      <nav className="mobile-dock-nav" aria-label={language === "es" ? "Navegación principal" : "Primary navigation"}>{mobileNavItems.map(({ id, label, icon: Icon }) => <button className={tab === id ? "rail-link active" : "rail-link"} type="button" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} key={id}><Icon aria-hidden="true" weight={tab === id ? "fill" : "regular"} /><span>{t(label)}</span></button>)}</nav>
       <div className="rail-bottom"><div className="rail-profile"><span className="profile-avatar" aria-hidden="true">{data.userName.slice(0, 2).toUpperCase()}</span><span className="profile-copy"><strong>{data.userName}</strong><small>{t("Signed In")}</small></span></div><button className="signout-button" type="button" onClick={signOut} disabled={signingOut} aria-label={signingOut ? t("Signing Out…") : t("Sign Out")}><SignOut aria-hidden="true" /><span>{signingOut ? t("Signing Out…") : t("Sign Out")}</span></button></div>
     </aside>
     <main className="content dashboard-surface" id="main-content">

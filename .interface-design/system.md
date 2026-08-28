@@ -106,7 +106,7 @@ Color distribution should remain approximately 60% ink canvas, 30% blue-teal sur
 
 - Primary action: 48px minimum height, mint surface, mint ink, `0.85rem` radius, subtle lift, 160ms transform/color/shadow transition, `scale(0.97)` active state.
 - Inset field: 44px minimum height, dark receiving surface, quiet strong border, `0.65–0.75rem` radius, brighter border on hover, visible gold focus ring.
-- Native select: preserve native keyboard/semantics; apply the Laundry chevron and adequate right padding. Use a proven accessible primitive only when native behavior cannot meet the interaction.
+- Select system: every native dashboard/auth select opts into `appearance: base-select` when supported, with a raised Laundry picker, 48px options, mint selection/checkmark, bounded viewport height, and an OS-native fallback. Rich finance choices use `SelectField`: a semantic trigger plus modal choice sheet, grouped labels, visible selected state, arrow-key movement, Escape dismissal, and a mobile bottom-sheet layout. Server schemas remain authoritative for submitted values.
 - Color input: full-width 48px control with an inset swatch and rounded internal sample.
 - Panel: deep blue-teal surface, quiet border, no decorative shadow by default, padding on the 4px grid.
 - Expense record: receipt icon, payee/category focal label, date/account metadata, scope metadata, tabular coral amount, and a secondary remove action.

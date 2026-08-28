@@ -6,6 +6,7 @@ import { Funnel, MagnifyingGlass, Plus, Storefront, Tag as TagIcon, X } from "@p
 import type { DashboardData } from "../lib/dashboard";
 import { localeFor, translate, type AppLanguage } from "../lib/i18n";
 import { createPayee, createTag, postTransaction, searchTransactions } from "./actions/finance";
+import { SelectField } from "./select-field";
 
 type ActivityWorkspaceProps = { data: DashboardData; language: AppLanguage };
 
@@ -21,6 +22,12 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
 
   if (!household) return null;
   const activeHousehold = household;
+  const accountOptions = data.accounts.map((account) => ({ value: account.id, label: account.name, meta: `${account.kind} · ${account.currency}` }));
+  const categoryOptions = [
+    { value: "", label: t("No category"), group: t("Unassigned") },
+    ...data.categories.map((category) => ({ value: category.id, label: category.name, group: t(category.kind === "expense" ? "Expense categories" : "Income categories") })),
+  ];
+  const visibilityOptions = [{ value: "shared", label: t("Shared"), meta: t("Visible to household members") }, { value: "private", label: t("Private"), meta: t("Visible only to you") }];
 
   function run(action: () => Promise<{ error?: string }>, success: string, form?: HTMLFormElement) {
     setMessage("");
@@ -37,14 +44,15 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
     event.preventDefault();
     const form = event.currentTarget;
     const fields = new FormData(form);
+    const kind = String(fields.get("kind"));
     run(() => postTransaction({
       householdId: activeHousehold.id,
       accountId: fields.get("accountId"),
-      transferAccountId: optional(fields, "transferAccountId"),
+      transferAccountId: kind === "transfer" ? optional(fields, "transferAccountId") : undefined,
       categoryId: optional(fields, "categoryId"),
       payeeId: optional(fields, "payeeId"),
       tagIds: fields.getAll("tagIds").map(String),
-      kind: fields.get("kind"), amount: fields.get("amount"), currency: fields.get("currency"),
+      kind, amount: fields.get("amount"), currency: fields.get("currency"),
       reportingExchangeRate: fields.get("rate"), occurredOn: fields.get("occurredOn"),
       note: optional(fields, "note"), visibility: fields.get("visibility"), items: [],
     }), "Transaction posted.", form);
@@ -86,17 +94,17 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
     <section className="wide-card activity-entry" id="transaction-form">
       <div className="section-head"><div><p className="eyebrow">{t("NEW LEDGER ENTRY")}</p><h2>{t("Post ledger transaction")}</h2><p>{t("Record the movement once, then organize it with a payee and reusable tags.")}</p></div><span className="entry-orbit" aria-hidden="true"><Plus weight="bold" /></span></div>
       <form className="form-grid" onSubmit={submitTransaction}>
-        <label>{t("Type")}<select name="kind" defaultValue="expense"><option value="expense">{t("Expense")}</option><option value="income">{t("Income")}</option><option value="transfer">{t("Transfer")}</option><option value="adjustment">{t("Adjustment")}</option></select></label>
-        <label>{t("Account")}<select name="accountId" required>{data.accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}</select></label>
-        <label>{t("Transfer destination")}<select name="transferAccountId"><option value="">{t("Not a transfer")}</option>{data.accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}</select></label>
-        <label>{t("Category")}<select name="categoryId"><option value="">{t("No category")}</option>{data.categories.map((category) => <option key={category.id} value={category.id}>{t(category.kind === "expense" ? "Expense" : "Income")}: {category.name}</option>)}</select></label>
+        <SelectField name="kind" label={t("Type")} closeLabel={t("Close")} defaultValue="expense" sheetTitle={t("Choose the movement type")} options={[{ value: "expense", label: t("Expense"), meta: t("Money leaving an account") }, { value: "income", label: t("Income"), meta: t("Money entering an account") }, { value: "transfer", label: t("Transfer"), meta: t("Move money between accounts") }, { value: "adjustment", label: t("Adjustment"), meta: t("Correct an account balance") }]} />
+        <SelectField name="accountId" label={t("Account")} closeLabel={t("Close")} defaultValue={data.accounts[0]?.id} sheetTitle={t("Choose the source account")} options={accountOptions} required disabled={!data.accounts.length} />
+        <SelectField name="transferAccountId" label={t("Transfer destination")} closeLabel={t("Close")} sheetTitle={t("Choose the destination account")} options={[{ value: "", label: t("Not a transfer") }, ...accountOptions]} />
+        <SelectField name="categoryId" label={t("Category")} closeLabel={t("Close")} sheetTitle={t("Choose a category")} options={categoryOptions} />
         <label>{t("Amount")}<input name="amount" required inputMode="decimal" /></label>
         <label>{t("Currency")}<input name="currency" defaultValue={activeHousehold.currency} maxLength={3} required /></label>
-        <label>{t("Reporting FX rate")}<input name="rate" defaultValue="1" inputMode="decimal" required /></label>
+        <label>{t("Exchange rate to")} {activeHousehold.currency}<input name="rate" defaultValue="1" inputMode="decimal" required aria-describedby="fx-rate-help" /><small className="field-help" id="fx-rate-help">{t("How many units of your reporting currency equal one unit of this transaction currency. Leave it at 1 when both currencies match.")}</small></label>
         <label>{t("Date")}<input name="occurredOn" defaultValue={data.asOf} type="date" required /></label>
-        <label>{t("Payee")}<select name="payeeId"><option value="">{t("No payee")}</option>{data.payees.map((payee) => <option key={payee.id} value={payee.id}>{payee.name}</option>)}</select></label>
+        <SelectField name="payeeId" label={t("Payee")} closeLabel={t("Close")} sheetTitle={t("Choose a payee")} options={[{ value: "", label: t("No payee") }, ...data.payees.map((payee) => ({ value: payee.id, label: payee.name }))]} />
         <label className="grow">{t("Note")}<input name="note" maxLength={2000} /></label>
-        <label>{t("Visibility")}<select name="visibility" defaultValue="shared"><option value="shared">{t("Shared")}</option><option value="private">{t("Private")}</option></select></label>
+        <SelectField name="visibility" label={t("Visibility")} closeLabel={t("Close")} defaultValue="shared" sheetTitle={t("Choose who can see it")} options={visibilityOptions} />
         {data.tags.length > 0 && <fieldset className="tag-picker full"><legend>{t("Tags")}</legend><div>{data.tags.map((tag) => <label className="tag-choice" key={tag.id}><input type="checkbox" name="tagIds" value={tag.id} /><i style={{ backgroundColor: tag.color }} aria-hidden="true" />{tag.name}</label>)}</div></fieldset>}
         <button className="submit-button" disabled={pending || !data.accounts.length}>{pending ? t("Posting…") : t("Post transaction")}</button>
       </form>

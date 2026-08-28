@@ -550,7 +550,59 @@
 .dashboard-surface select:hover,
 .dashboard-surface textarea:hover { border-color: rgb(214 244 232 / 0.3); background-color: rgb(7 20 27 / 0.9); }
 .dashboard-surface select { appearance: none; padding-right: 2.5rem !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m6 8 4 4 4-4' stroke='%23b8f5d2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.78rem center; background-size: 1rem; }
+@supports (appearance: base-select) {
+  .dashboard-surface select,
+  .dashboard-surface select::picker(select) { appearance: base-select; }
+  .dashboard-surface select { padding-right: 0.8rem !important; background-image: none; }
+  .dashboard-surface select::picker-icon { width: 1rem; height: 1rem; margin-left: 0.7rem; color: var(--mint); transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .dashboard-surface select:open::picker-icon { transform: rotate(180deg); }
+  .dashboard-surface select::picker(select) { max-height: min(24rem, calc(100dvh - 2rem)); margin-block: 0.4rem; padding: 0.42rem; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--vault-line-strong); border-radius: 1rem; background: var(--vault-raised); color: var(--vault-ink); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.46); scrollbar-color: rgb(184 245 210 / 0.28) transparent; }
+  .dashboard-surface option { min-height: 3rem; padding: 0.72rem 2.7rem 0.72rem 0.78rem; border: 0; border-radius: 0.72rem; background: transparent; color: var(--vault-secondary); font-size: 0.75rem; font-weight: 620; }
+  .dashboard-surface option:hover,
+  .dashboard-surface option:focus { background: rgb(255 255 255 / 0.045); color: var(--vault-ink); }
+  .dashboard-surface option:checked { background: rgb(184 245 210 / 0.1); color: var(--mint); font-weight: 740; }
+  .dashboard-surface option::checkmark { order: 1; margin-left: auto; color: var(--mint); }
+  .dashboard-surface optgroup { margin-top: 0.35rem; padding: 0.35rem; border-top: 1px solid var(--vault-line); color: var(--vault-muted); font-size: 0.62rem; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
+}
 .dashboard-surface input[type="date"] { color-scheme: dark; }
+.dashboard-surface input[type="date"] { display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; appearance: none; -webkit-appearance: none; }
+.dashboard-surface input[type="date"]::-webkit-date-and-time-value { min-height: 1.35rem; margin: 0; text-align: left; }
+.dashboard-surface input[type="date"]::-webkit-calendar-picker-indicator { width: 1.25rem; height: 1.25rem; margin: 0; padding: 0.25rem; opacity: 0.78; cursor: pointer; }
+.field-help { display: block; max-width: 28rem; color: var(--vault-muted); font-size: 0.6rem; font-weight: 500; line-height: 1.5; text-wrap: pretty; }
+
+/* Custom choice sheet: consistent Laundry selection instead of oversized OS pickers. */
+.select-field { display: grid; min-width: 0; align-content: start; gap: 0.45rem; }
+.select-label { color: var(--vault-secondary); font-size: 0.68rem; font-weight: 650; }
+.select-trigger { position: relative; display: grid; width: 100%; min-width: 0; min-height: 3rem; grid-template-columns: minmax(0, 1fr) auto; align-content: center; align-items: center; gap: 0.2rem 0.75rem; padding: 0.62rem 2.8rem 0.62rem 0.82rem; border: 1px solid var(--vault-line-strong); border-radius: 0.72rem; background: rgb(5 15 21 / 0.72); color: var(--vault-ink); text-align: left; transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.select-trigger:hover { border-color: rgb(214 244 232 / 0.3); background: rgb(7 20 27 / 0.9); }
+.select-trigger:active { transform: scale(0.985); }
+.select-trigger > span { min-width: 0; overflow: hidden; font-size: 0.75rem; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
+.select-trigger > small { grid-column: 1; color: var(--vault-muted); font-size: 0.58rem; font-weight: 520; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.select-trigger > svg { position: absolute; right: 0.82rem; top: 50%; width: 1rem; height: 1rem; color: var(--mint); transform: translateY(-50%); }
+.select-placeholder { color: var(--vault-muted); font-weight: 560 !important; }
+.select-sheet { width: min(32rem, calc(100% - 2rem)); max-height: min(42rem, calc(100dvh - 2rem)); margin: auto; padding: 0; overflow: hidden; border: 1px solid var(--vault-line-strong); border-radius: 1.5rem; background: transparent; color: var(--vault-ink); box-shadow: 0 2rem 6rem rgb(0 0 0 / 0.58); }
+.select-sheet::backdrop { background: rgb(2 9 13 / 0.76); backdrop-filter: blur(0.35rem); }
+.select-sheet-panel { display: grid; max-height: min(42rem, calc(100dvh - 2rem)); grid-template-rows: auto minmax(0, 1fr); overflow: hidden; border-radius: inherit; background: var(--vault-raised); }
+.select-sheet header { display: flex; min-height: 5.1rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1rem 0.9rem 1.25rem; border-bottom: 1px solid var(--vault-line); background: radial-gradient(circle at 15% 0%, rgb(121 223 169 / 0.11), transparent 12rem); }
+.select-sheet header p { margin: 0; color: var(--mint-strong); font-size: 0.55rem; font-weight: 780; letter-spacing: 0.13em; text-transform: uppercase; }
+.select-sheet header h3 { margin: 0.3rem 0 0; color: var(--vault-ink); font-size: 1.15rem; letter-spacing: -0.035em; text-wrap: balance; }
+.select-sheet header button { display: grid; width: 2.75rem; height: 2.75rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--vault-line); border-radius: 0.8rem; background: rgb(255 255 255 / 0.025); color: var(--vault-secondary); }
+.select-sheet header button:hover { border-color: var(--vault-line-strong); color: var(--mint); }
+.select-sheet header svg { width: 1rem; height: 1rem; }
+.select-options { overflow-y: auto; overscroll-behavior: contain; padding: 0.55rem; scrollbar-color: rgb(184 245 210 / 0.25) transparent; }
+.select-options section + section { margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--vault-line); }
+.select-group-label { margin: 0; padding: 0.65rem 0.7rem 0.4rem; color: var(--vault-muted); font-size: 0.58rem; font-weight: 750; letter-spacing: 0.11em; text-transform: uppercase; }
+.select-options [role="option"] { display: grid; width: 100%; min-height: 3.75rem; grid-template-columns: auto minmax(0, 1fr) 1.5rem; align-items: center; gap: 0.75rem; padding: 0.7rem; border: 1px solid transparent; border-radius: 0.85rem; background: transparent; color: var(--vault-secondary); text-align: left; transition: border-color 140ms cubic-bezier(0.23, 1, 0.32, 1), background-color 140ms cubic-bezier(0.23, 1, 0.32, 1), color 140ms cubic-bezier(0.23, 1, 0.32, 1); }
+.select-options [role="option"]:hover { background: rgb(255 255 255 / 0.035); color: var(--vault-ink); }
+.select-options [role="option"][aria-selected="true"] { border-color: rgb(184 245 210 / 0.22); background: rgb(184 245 210 / 0.08); color: var(--vault-ink); }
+.select-options [role="option"] > span:nth-child(2) { display: grid; min-width: 0; gap: 0.18rem; }
+.select-options strong { overflow: hidden; font-size: 0.78rem; text-overflow: ellipsis; white-space: nowrap; }
+.select-options small { color: var(--vault-muted); font-size: 0.6rem; line-height: 1.35; }
+.select-options [role="option"] > svg { width: 1rem; height: 1rem; color: var(--mint); }
+.select-orbit { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 1px solid var(--vault-line-strong); border-radius: 50%; }
+.select-orbit i { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--vault-muted); }
+.select-options [aria-selected="true"] .select-orbit { border-color: var(--mint-strong); box-shadow: 0 0 0 0.25rem rgb(121 223 169 / 0.07); }
+.select-options [aria-selected="true"] .select-orbit i { background: var(--mint); }
 .dashboard-surface input[type="file"] { padding: 0.35rem; }
 .dashboard-surface input[type="file"]::file-selector-button { min-height: 2.25rem; margin-right: 0.65rem; padding: 0.45rem 0.7rem; border: 1px solid var(--vault-line-strong); border-radius: 0.55rem; background: rgb(184 245 210 / 0.08); color: var(--mint); font-weight: 700; cursor: pointer; }
 .dashboard-surface input[type="color"] { width: 100%; min-height: 3rem; padding: 0.35rem; cursor: pointer; }
@@ -750,6 +802,19 @@
   .language-form { grid-column: 1 / -1; }
   .settings-grid { grid-template-columns: 1fr; }
   .settings-shortcuts { grid-template-columns: 1fr; }
+  .dashboard-surface label,
+  .dashboard-surface .select-field { min-width: 0; max-width: 100%; }
+  .dashboard-surface input,
+  .dashboard-surface select,
+  .dashboard-surface textarea,
+  .select-trigger { width: 100%; max-width: 100%; }
+  .dashboard-surface input[type="date"] { min-height: 3.1rem; padding: 0.7rem 0.75rem; font-size: 1rem; }
+  .select-sheet { inset: auto 0 0; width: 100%; max-width: none; max-height: min(78dvh, 42rem); margin: 0; border-width: 1px 0 0; border-radius: 1.5rem 1.5rem 0 0; }
+  .select-sheet-panel { max-height: min(78dvh, 42rem); padding-bottom: env(safe-area-inset-bottom); }
+  @supports (appearance: base-select) {
+    .dashboard-surface select::picker(select) { min-width: min(18rem, calc(100vw - 2rem)); max-width: calc(100vw - 2rem); }
+    .dashboard-surface option { min-height: 3.25rem; padding-block: 0.82rem; }
+  }
 }
 
 @media (max-width: 40rem) {
