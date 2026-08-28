@@ -3,19 +3,24 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "../../lib/supabase/admin";
 import { createClient } from "../../lib/supabase/server";
-import { accountSchema, budgetSchema, categorySchema, debtSchema, goalSchema, householdSchema, invitationSchema, recurringSchema, shoppingListSchema, transactionSchema, uuidSchema } from "../../lib/validation";
+import { accountSchema, budgetSchema, categorySchema, debtSchema, goalSchema, householdSchema, invitationSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema } from "../../lib/validation";
 
 type ActionResult<T = void> = { data?: T; error?: string };
 
 async function authenticatedClient() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error?.message.toLowerCase().includes("invalid api key")) throw new Error("Supabase browser connection is invalid");
   if (!user) throw new Error("Sign in to continue");
   return { supabase, user };
 }
 
 function actionError(error: unknown): { error: string } {
   console.error("finance action failed", error);
+  const message = typeof error === "object" && error !== null && "message" in error ? String(error.message).toLowerCase() : "";
+  if (message.includes("invalid api key") || message.includes("server-side finance operations") || message.includes("supabase browser connection")) {
+    return { error: "This deployment is not connected to Supabase correctly. Its administrator must add a valid server secret in Vercel and redeploy." };
+  }
   return { error: "We couldn't complete that request. Please try again." };
 }
 
@@ -83,6 +88,43 @@ export async function createShoppingList(input: unknown): Promise<ActionResult<{
     if (error || !data) throw error ?? new Error("List was not created");
     revalidatePath("/");
     return { data };
+  } catch (error) { return actionError(error); }
+}
+
+export async function addShoppingItem(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = shoppingItemSchema.parse(input);
+    const { supabase } = await authenticatedClient();
+    const { data: list, error: listError } = await supabase.from("shopping_lists").select("id,household_id").eq("id", value.listId).single();
+    if (listError || !list) throw listError ?? new Error("Shopping list was not found");
+    if (value.categoryId) {
+      const { data: category, error: categoryError } = await supabase.from("categories").select("id").eq("id", value.categoryId).eq("household_id", list.household_id).eq("kind", "expense").single();
+      if (categoryError || !category) throw categoryError ?? new Error("Category was not found");
+    }
+    const { data, error } = await supabase.from("shopping_items").insert({
+      list_id: value.listId, category_id: value.categoryId ?? null, name: value.name, quantity: value.quantity,
+      estimated_price: value.estimatedPrice, tax_rate: value.taxRate ?? null, fixed_tax: value.fixedTax ?? null,
+    }).select("id").single();
+    if (error || !data) throw error ?? new Error("Shopping item was not added");
+    revalidatePath("/");
+    return { data };
+  } catch (error) { return actionError(error); }
+}
+
+export async function checkoutShoppingList(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = shoppingCheckoutSchema.parse(input);
+    const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("checkout_shopping_list", {
+      actor_id: user.id, target_list: value.listId, source_account: value.accountId, target_category: value.categoryId,
+      transaction_date: value.occurredOn, transaction_visibility: value.visibility,
+      selected_items: value.items.map((item) => ({ id: item.id, categoryId: item.categoryId ?? null, quantity: item.quantity,
+        actualPrice: item.actualPrice, discount: item.discount, taxRate: item.taxRate ?? null, fixedTax: item.fixedTax ?? null })),
+      list_discount: value.discount, list_shipping: value.shipping, list_tip: value.tip, transaction_note: value.note ?? null,
+    });
+    if (error || !data) throw error ?? new Error("Shopping checkout was not posted");
+    revalidatePath("/");
+    return { data: { id: data } };
   } catch (error) { return actionError(error); }
 }
 

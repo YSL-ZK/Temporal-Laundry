@@ -25,16 +25,20 @@ export default function OnboardingPage() {
     router.replace("/");
   }
 
-  return <main className="auth-page"><section className="auth-card">
-    <p className="eyebrow">FIRST STEP</p>
-    <h1>Name your household.</h1>
-    <p className="muted">You will be its owner. You can invite members later.</p>
-    <form className="form-grid" onSubmit={submit}>
+  return <main className="auth-page auth-experience"><div className="auth-atmosphere" aria-hidden="true"><div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" /><div className="auth-coin auth-coin-one">$</div><div className="auth-coin auth-coin-two">%</div><div className="auth-coin auth-coin-three">+</div></div><div className="auth-grid"><section className="auth-intro">
+    <div className="auth-brand"><span>L</span> Ledgerly</div><p className="eyebrow">YOUR SHARED FINANCIAL SPACE</p>
+    <h1>A household is more than an <em>account.</em></h1><p>Give this space a name. You will be the owner, with full control over who joins and what stays private.</p>
+    <div className="auth-points"><span>Invite on your terms</span><span>Multiple currencies</span><span>Clear audit trail</span></div>
+  </section><section className="auth-card">
+    <div className="auth-card-heading"><p className="eyebrow">FIRST STEP</p><span className="auth-status">Owner setup</span></div>
+    <h2>Name your shared space.</h2>
+    <p className="muted">Start simple. You can create accounts, lists, and invitations next.</p>
+    <form className="form-grid auth-form" onSubmit={submit}>
       <label>Household name<input required autoFocus maxLength={80} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Alex + Jules" /></label>
       <label>Reporting currency<select value={currency} onChange={(event) => setCurrency(event.target.value)}><option>USD</option><option>EUR</option><option>COP</option><option>GBP</option></select></label>
       <label>Default shopping tax rate (%)<input required min="0" max="100" step="0.01" type="number" value={taxRate} onChange={(event) => setTaxRate(event.target.value)} /></label>
       {message && <p className="form-note" role="alert">{message}</p>}
       <button className="submit-button" disabled={submitting}>{submitting ? "Creating…" : "Create household"}</button>
     </form>
-  </section></main>;
+  </section></div></main>;
 }

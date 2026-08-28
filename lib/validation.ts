@@ -49,6 +49,39 @@ export const shoppingListSchema = z.object({
   defaultTaxRate: z.coerce.number().min(0).max(100).default(0),
 });
 
+export const shoppingItemSchema = z.object({
+  listId: uuidSchema,
+  categoryId: uuidSchema.optional(),
+  name: z.string().trim().min(1).max(160),
+  quantity: z.coerce.number().finite().positive().max(1_000_000).default(1),
+  estimatedPrice: moneySchema,
+  taxRate: z.coerce.number().finite().min(0).max(100).optional(),
+  fixedTax: moneySchema.optional(),
+});
+
+const checkoutLineSchema = z.object({
+  id: uuidSchema,
+  categoryId: uuidSchema.optional(),
+  quantity: z.coerce.number().finite().positive().max(1_000_000),
+  actualPrice: moneySchema,
+  discount: moneySchema.default(0),
+  taxRate: z.coerce.number().finite().min(0).max(100).optional(),
+  fixedTax: moneySchema.optional(),
+});
+
+export const shoppingCheckoutSchema = z.object({
+  listId: uuidSchema,
+  accountId: uuidSchema,
+  categoryId: uuidSchema,
+  occurredOn: z.string().date(),
+  visibility: visibilitySchema,
+  discount: moneySchema.default(0),
+  shipping: moneySchema.default(0),
+  tip: moneySchema.default(0),
+  note: z.string().trim().max(2_000).optional(),
+  items: z.array(checkoutLineSchema).min(1).max(250),
+});
+
 export const invitationSchema = z.object({
   householdId: uuidSchema,
   email: z.string().trim().toLowerCase().email().max(254),
