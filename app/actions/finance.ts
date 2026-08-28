@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "../../lib/supabase/admin";
 import { createClient } from "../../lib/supabase/server";
-import { accountSchema, budgetSchema, categorySchema, debtSchema, goalSchema, householdSchema, invitationSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema } from "../../lib/validation";
+import { accountSchema, budgetEnvelopeSchema, budgetSchema, categorySchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, recurringConfirmSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema } from "../../lib/validation";
 
 type ActionResult<T = void> = { data?: T; error?: string };
 
@@ -165,6 +165,38 @@ export async function createRecurringRule(input: unknown): Promise<ActionResult<
     const value = recurringSchema.parse(input); const { supabase, user } = await authenticatedClient();
     const { data, error } = await supabase.from("recurring_rules").insert({ household_id: value.householdId, owner_id: user.id, visibility: value.visibility, account_id: value.accountId, category_id: value.categoryId ?? null, name: value.name, amount: value.amount, currency: value.currency, cadence: value.cadence, next_due_on: value.nextDueOn, rule_kind: value.ruleKind }).select("id").single();
     if (error || !data) throw error ?? new Error("Recurring rule was not created"); revalidatePath("/"); return { data };
+  } catch (error) { return actionError(error); }
+}
+
+export async function confirmRecurringRule(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = recurringConfirmSchema.parse(input); const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("confirm_recurring_rule", { actor_id: user.id, target_rule: value.ruleId, payment_date: value.paidOn });
+    if (error || !data) throw error ?? new Error("Recurring item was not confirmed"); revalidatePath("/"); return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function allocateGoal(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = goalAllocationSchema.parse(input); const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("allocate_goal", { actor_id: user.id, target_goal: value.goalId, allocation_amount: value.amount, allocation_date: value.allocatedOn, allocation_note: value.note ?? null });
+    if (error || !data) throw error ?? new Error("Goal allocation was not created"); revalidatePath("/"); return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function recordDebtPayment(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = debtPaymentSchema.parse(input); const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("record_debt_payment", { actor_id: user.id, target_debt: value.debtId, source_account: value.accountId, payment_amount: value.amount, payment_date: value.paidOn, payment_visibility: value.visibility, payment_note: value.note ?? null });
+    if (error || !data) throw error ?? new Error("Debt payment was not recorded"); revalidatePath("/"); return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function createBudgetEnvelope(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = budgetEnvelopeSchema.parse(input); const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("create_budget_envelope", { actor_id: user.id, target_budget: value.budgetId, envelope_name: value.name, allocated_amount: value.amount });
+    if (error || !data) throw error ?? new Error("Budget envelope was not created"); revalidatePath("/"); return { data: { id: data } };
   } catch (error) { return actionError(error); }
 }
 

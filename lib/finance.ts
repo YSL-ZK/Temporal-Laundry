@@ -77,6 +77,20 @@ export function shoppingTotals(list: ShoppingList, boughtOnly = true) {
   return { subtotal, tax, discount, total, count: items.length };
 }
 
+/** Returns the months needed at a fixed monthly payment, or null when the debt will never amortize. */
+export function debtPayoffMonths(balance: number, annualRate: number, monthlyPayment: number) {
+  if (!Number.isFinite(balance) || !Number.isFinite(annualRate) || !Number.isFinite(monthlyPayment) || balance <= 0 || monthlyPayment <= 0) return null;
+  const monthlyRate = Math.max(0, annualRate) / 1200;
+  if (monthlyRate > 0 && monthlyPayment <= balance * monthlyRate) return null;
+  let remaining = balance;
+  for (let month = 1; month <= 1200; month += 1) {
+    const interest = remaining * monthlyRate;
+    remaining = Math.max(0, remaining + interest - monthlyPayment);
+    if (remaining <= 0.005) return month;
+  }
+  return null;
+}
+
 export function accountBalance(account: Account, transactions: Transaction[]) {
   return transactions.filter((transaction) => transaction.accountId === account.id && transaction.status === "posted")
     .reduce((balance, transaction) => {
