@@ -11,6 +11,7 @@ import { SelectField } from "./select-field";
 type ActivityWorkspaceProps = { data: DashboardData; language: AppLanguage };
 
 const optional = (form: FormData, key: string) => String(form.get(key) ?? "").trim() || undefined;
+const COMMON_CURRENCIES = ["COP", "USD", "EUR", "GBP", "CAD", "MXN", "BRL", "ARS", "CLP", "PEN", "JPY", "CNY", "AUD", "CHF"];
 
 export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
   const household = data.household;
@@ -18,11 +19,15 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
   const [pending, startTransition] = useTransition();
   const [results, setResults] = useState(data.transactions);
   const [message, setMessage] = useState("");
+  const [accountId, setAccountId] = useState(data.accounts[0]?.id ?? "");
+  const [transactionCurrency, setTransactionCurrency] = useState(data.accounts[0]?.currency ?? data.household?.currency ?? "USD");
   const t = (copy: string) => translate(language, copy);
 
   if (!household) return null;
   const activeHousehold = household;
   const accountOptions = data.accounts.map((account) => ({ value: account.id, label: account.name, meta: `${account.kind} · ${account.currency}` }));
+  const currencyNames = new Intl.DisplayNames(localeFor(language), { type: "currency" });
+  const currencyOptions = [...new Set([activeHousehold.currency, ...data.accounts.map((account) => account.currency), ...COMMON_CURRENCIES])].map((code) => ({ value: code, label: code, meta: currencyNames.of(code) ?? code }));
   const categoryOptions = [
     { value: "", label: t("No category"), group: t("Unassigned") },
     ...data.categories.map((category) => ({ value: category.id, label: category.name, group: t(category.kind === "expense" ? "Expense categories" : "Income categories") })),
@@ -95,11 +100,11 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
       <div className="section-head"><div><p className="eyebrow">{t("NEW LEDGER ENTRY")}</p><h2>{t("Post ledger transaction")}</h2><p>{t("Record the movement once, then organize it with a payee and reusable tags.")}</p></div><span className="entry-orbit" aria-hidden="true"><Plus weight="bold" /></span></div>
       <form className="form-grid" onSubmit={submitTransaction}>
         <SelectField name="kind" label={t("Type")} closeLabel={t("Close")} defaultValue="expense" sheetTitle={t("Choose the movement type")} options={[{ value: "expense", label: t("Expense"), meta: t("Money leaving an account") }, { value: "income", label: t("Income"), meta: t("Money entering an account") }, { value: "transfer", label: t("Transfer"), meta: t("Move money between accounts") }, { value: "adjustment", label: t("Adjustment"), meta: t("Correct an account balance") }]} />
-        <SelectField name="accountId" label={t("Account")} closeLabel={t("Close")} defaultValue={data.accounts[0]?.id} sheetTitle={t("Choose the source account")} options={accountOptions} required disabled={!data.accounts.length} />
+        <SelectField name="accountId" label={t("Account")} closeLabel={t("Close")} value={accountId} onValueChange={(nextAccountId) => { setAccountId(nextAccountId); const account = data.accounts.find((item) => item.id === nextAccountId); if (account) setTransactionCurrency(account.currency); }} sheetTitle={t("Choose the source account")} options={accountOptions} required disabled={!data.accounts.length} />
         <SelectField name="transferAccountId" label={t("Transfer destination")} closeLabel={t("Close")} sheetTitle={t("Choose the destination account")} options={[{ value: "", label: t("Not a transfer") }, ...accountOptions]} />
         <SelectField name="categoryId" label={t("Category")} closeLabel={t("Close")} sheetTitle={t("Choose a category")} options={categoryOptions} />
         <label>{t("Amount")}<input name="amount" required inputMode="decimal" /></label>
-        <label>{t("Currency")}<input name="currency" defaultValue={activeHousehold.currency} maxLength={3} required /></label>
+        <SelectField name="currency" label={t("Currency")} closeLabel={t("Close")} value={transactionCurrency} onValueChange={setTransactionCurrency} sheetTitle={t("Choose the transaction currency")} options={currencyOptions} required />
         <label>{t("Exchange rate to")} {activeHousehold.currency}<input name="rate" defaultValue="1" inputMode="decimal" required aria-describedby="fx-rate-help" /><small className="field-help" id="fx-rate-help">{t("How many units of your reporting currency equal one unit of this transaction currency. Leave it at 1 when both currencies match.")}</small></label>
         <label>{t("Date")}<input name="occurredOn" defaultValue={data.asOf} type="date" required /></label>
         <SelectField name="payeeId" label={t("Payee")} closeLabel={t("Close")} sheetTitle={t("Choose a payee")} options={[{ value: "", label: t("No payee") }, ...data.payees.map((payee) => ({ value: payee.id, label: payee.name }))]} />

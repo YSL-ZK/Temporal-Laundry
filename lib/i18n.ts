@@ -214,6 +214,7 @@ const spanish: Record<string, string> = {
   "Close": "Cerrar",
   "Exchange rate to": "Tasa de cambio a",
   "How many units of your reporting currency equal one unit of this transaction currency. Leave it at 1 when both currencies match.": "Cuántas unidades de tu moneda principal equivalen a una unidad de la moneda del movimiento. Déjala en 1 cuando ambas monedas sean iguales.",
+  "Choose the transaction currency": "Elige la moneda del movimiento",
   "LEDGER LENS": "LENTE DEL LIBRO",
   "Search and filter": "Buscar y filtrar",
   "Narrow the posted history without changing the ledger itself.": "Acota el historial sin modificar el libro contable.",

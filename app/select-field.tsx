@@ -10,6 +10,8 @@ type SelectFieldProps = {
   label: string;
   options: SelectOption[];
   defaultValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
   disabled?: boolean;
   required?: boolean;
   sheetTitle?: string;
@@ -17,12 +19,13 @@ type SelectFieldProps = {
   closeLabel?: string;
 };
 
-export function SelectField({ name, label, options, defaultValue = "", disabled = false, required = false, sheetTitle, emptyLabel, closeLabel = "Close" }: SelectFieldProps) {
+export function SelectField({ name, label, options, defaultValue = "", value: controlledValue, onValueChange, disabled = false, required = false, sheetTitle, emptyLabel, closeLabel = "Close" }: SelectFieldProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const labelId = useId();
   const listId = useId();
-  const [value, setValue] = useState(defaultValue);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const value = controlledValue ?? internalValue;
   const selected = options.find((option) => option.value === value);
   const groups = [...new Set(options.map((option) => option.group ?? ""))];
 
@@ -36,7 +39,8 @@ export function SelectField({ name, label, options, defaultValue = "", disabled 
   }
 
   function choose(nextValue: string) {
-    setValue(nextValue);
+    if (controlledValue === undefined) setInternalValue(nextValue);
+    onValueChange?.(nextValue);
     dialogRef.current?.close();
   }
 

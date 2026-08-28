@@ -62,6 +62,7 @@
 @supports (appearance: base-select) {
   .auth-experience .auth-form select,
   .auth-experience .auth-form select::picker(select) { appearance: base-select; }
+  .auth-experience .auth-form select { display: flex; align-items: center; justify-content: space-between; line-height: 1.25; }
   .auth-experience .auth-form select::picker-icon { margin-left: 0.75rem; color: var(--auth-mint); }
   .auth-experience .auth-form select::picker(select) { max-height: min(22rem, calc(100dvh - 2rem)); padding: 0.42rem; overflow-y: auto; overscroll-behavior: contain; border: 1px solid rgb(214 244 232 / 0.2); border-radius: 1rem; background: var(--auth-raised); color: var(--auth-ink); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.48); }
   .auth-experience .auth-form option { min-height: 3.15rem; padding: 0.8rem 2.7rem 0.8rem 0.78rem; border-radius: 0.7rem; background: transparent; color: var(--auth-secondary); }

@@ -553,7 +553,7 @@
 @supports (appearance: base-select) {
   .dashboard-surface select,
   .dashboard-surface select::picker(select) { appearance: base-select; }
-  .dashboard-surface select { padding-right: 0.8rem !important; background-image: none; }
+  .dashboard-surface select { display: flex; align-items: center; justify-content: space-between; padding-right: 0.8rem !important; background-image: none; line-height: 1.25; }
   .dashboard-surface select::picker-icon { width: 1rem; height: 1rem; margin-left: 0.7rem; color: var(--mint); transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1); }
   .dashboard-surface select:open::picker-icon { transform: rotate(180deg); }
   .dashboard-surface select::picker(select) { max-height: min(24rem, calc(100dvh - 2rem)); margin-block: 0.4rem; padding: 0.42rem; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--vault-line-strong); border-radius: 1rem; background: var(--vault-raised); color: var(--vault-ink); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.46); scrollbar-color: rgb(184 245 210 / 0.28) transparent; }
