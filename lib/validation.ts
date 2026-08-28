@@ -4,6 +4,7 @@ export const visibilitySchema = z.enum(["private", "shared"]);
 export const currencySchema = z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/, "Use a three-letter currency code");
 export const moneySchema = z.coerce.number().finite().min(0).max(999_999_999_999);
 export const uuidSchema = z.string().uuid();
+export const languageSchema = z.enum(["en", "es"]);
 
 export const accountSchema = z.object({
   householdId: uuidSchema,
@@ -102,3 +103,5 @@ export const recurringConfirmSchema = z.object({ ruleId: uuidSchema, paidOn: z.s
 export const goalAllocationSchema = z.object({ goalId: uuidSchema, amount: moneySchema.positive(), allocatedOn: z.string().date(), note: z.string().trim().max(500).optional() });
 export const debtPaymentSchema = z.object({ debtId: uuidSchema, accountId: uuidSchema, amount: moneySchema.positive(), paidOn: z.string().date(), visibility: visibilitySchema, note: z.string().trim().max(500).optional() });
 export const budgetEnvelopeSchema = z.object({ budgetId: uuidSchema, name: z.string().trim().min(1).max(80), amount: moneySchema });
+export const voidExpenseSchema = z.object({ transactionId: uuidSchema });
+export const profileLanguageSchema = z.object({ language: languageSchema });

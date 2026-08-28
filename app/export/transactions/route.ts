@@ -17,6 +17,7 @@ export async function GET() {
     .from("transactions")
     .select("occurred_on,kind,status,amount,currency,reporting_exchange_rate,payee,note,visibility,accounts(name),categories(name)")
     .eq("household_id", membership.household_id)
+    .is("voided_at", null)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(exportLimit);

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import LaundryMark from "../laundry-mark";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -41,7 +42,7 @@ export default function LoginPage() {
   }
 
   return <main className="auth-page auth-experience"><div className="auth-atmosphere" aria-hidden="true"><div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" /><div className="auth-coin auth-coin-one">$</div><div className="auth-coin auth-coin-two">%</div><div className="auth-coin auth-coin-three">+</div></div><div className="auth-grid"><section className="auth-intro">
-    <div className="auth-brand"><span aria-hidden="true">L</span> <strong translate="no">Laundry</strong></div><p className="eyebrow">SHARED FINANCE, WITHOUT THE FRICTION</p>
+    <div className="auth-brand"><LaundryMark className="auth-brand-mark" /> <strong translate="no">Laundry</strong></div><p className="eyebrow">SHARED FINANCE, WITHOUT THE FRICTION</p>
     <h1>Money moves better in the <em>same orbit.</em></h1>
     <p>One calm place for the accounts you own, the plans you share, and the small decisions that add up.</p>
     <div className="auth-points"><span>Private by default</span><span>Shared when invited</span><span>Built on a ledger</span></div>

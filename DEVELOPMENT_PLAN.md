@@ -9,6 +9,7 @@ This roadmap extends the original full-product plan. A checked item is implement
 - [x] Shopping lists with itemized checkout, tax overrides, discounts, shipping, tips, receipts, and unpurchased-item retention.
 - [x] Basic budgets/envelopes, goals/allocations, debts/payments, recurring confirmations, household invitations, reporting, and CSV export.
 - [x] Responsive Laundry design system, SEO metadata, social artwork, favicon set, and installable PWA shell.
+- [x] Persistent English/Spanish workspace preference with localized navigation, core finance forms, planning headings, reports, settings, dates, and accessibility labels.
 
 ## Finance assistant: Laundry Guide
 
@@ -28,7 +29,7 @@ This roadmap extends the original full-product plan. A checked item is implement
 - [ ] Create a separate Groq project/key for each deployment environment and enable Groq Zero Data Retention.
 - [ ] Add `GROQ_API_KEY`, optional `GROQ_MODEL`, and the existing Supabase service-role secret to Vercel; never expose them with a `NEXT_PUBLIC_` prefix.
 - [ ] Apply the AI quota migration and rerun Supabase Security and Performance Advisors.
-- [ ] Add an in-product consent notice describing which summaries leave Supabase and which inference provider processes them.
+- [x] Add an in-product consent notice describing which summaries leave Supabase and which inference provider processes them.
 - [ ] Add deletion/privacy documentation and a provider outage status message before public launch.
 - [ ] Add integration tests for authentication, RLS context isolation, parallel quota attempts, daily reset, provider timeout, malformed output, and prompt-injection cases.
 - [ ] Add Cloudflare Workers AI as a provider fallback while keeping the same server-only gateway and quotas.
@@ -52,6 +53,7 @@ The assistant is intentionally not a general agent. Users cannot choose arbitrar
 - [ ] Add full search/filtering across dates, accounts, categories, payees, tags, amounts, visibility, and status.
 - [ ] Add receipt browser/download/delete UI with storage-policy integration.
 - [ ] Add transaction detail, edit/draft/reversal workflows while preserving posted-ledger audit history.
+- [x] Add creator-only expense voiding with immutable audit history and active-balance/report/export recalculation.
 - [ ] Build account reconciliation and statement discrepancy handling.
 
 ### Cards, bills, and calendar

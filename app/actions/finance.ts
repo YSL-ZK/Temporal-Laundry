@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "../../lib/supabase/admin";
 import { createClient } from "../../lib/supabase/server";
-import { accountSchema, budgetEnvelopeSchema, budgetSchema, categorySchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, recurringConfirmSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema } from "../../lib/validation";
+import { accountSchema, budgetEnvelopeSchema, budgetSchema, categorySchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, profileLanguageSchema, recurringConfirmSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema, voidExpenseSchema } from "../../lib/validation";
 
 type ActionResult<T = void> = { data?: T; error?: string };
 
@@ -16,7 +16,10 @@ async function authenticatedClient() {
 }
 
 function actionError(error: unknown): { error: string } {
-  console.error("finance action failed", error);
+  const diagnostic = typeof error === "object" && error !== null
+    ? { name: "name" in error ? String(error.name) : "Error", code: "code" in error ? String(error.code) : undefined }
+    : { name: "Error" };
+  console.error("finance action failed", diagnostic);
   const message = typeof error === "object" && error !== null && "message" in error ? String(error.message).toLowerCase() : "";
   if (message.includes("invalid api key") || message.includes("server-side finance operations") || message.includes("supabase browser connection")) {
     return { error: "This deployment is not connected to Supabase correctly. Its administrator must add a valid server secret in Vercel and redeploy." };
@@ -246,5 +249,30 @@ export async function uploadReceipt(formData: FormData): Promise<ActionResult<{ 
     }
     revalidatePath("/");
     return { data: receipt };
+  } catch (error) { return actionError(error); }
+}
+
+export async function updateProfileLanguage(input: unknown): Promise<ActionResult> {
+  try {
+    const value = profileLanguageSchema.parse(input);
+    const { supabase, user } = await authenticatedClient();
+    const { error } = await supabase.from("profiles").update({ preferred_language: value.language }).eq("id", user.id);
+    if (error) throw error;
+    revalidatePath("/");
+    return {};
+  } catch (error) { return actionError(error); }
+}
+
+export async function voidOwnedExpense(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = voidExpenseSchema.parse(input);
+    const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("void_owned_expense", {
+      actor_id: user.id,
+      target_transaction: value.transactionId,
+    });
+    if (error || !data) throw error ?? new Error("Expense was not removed");
+    revalidatePath("/");
+    return { data: { id: data } };
   } catch (error) { return actionError(error); }
 }

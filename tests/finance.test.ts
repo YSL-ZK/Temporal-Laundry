@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { debtPayoffMonths, formula, shoppingTotals, type ShoppingList } from "../lib/finance";
 import { csvCell, csvRow } from "../lib/csv";
 import { buildFinanceSnapshot, checkFinanceQuestion, financeChatRequestSchema, normalizeAssistantText } from "../lib/finance-ai";
+import { localeFor, translate } from "../lib/i18n";
 import type { DashboardData } from "../lib/dashboard";
 
 const list: ShoppingList = { id: "list", name: "Test", scope: "shared", currency: "USD", defaultTaxRate: 10, discount: 4, shipping: 2, tip: 0, status: "open", items: [
@@ -51,9 +52,9 @@ test("finance assistant request schema bounds history and requires a final user 
 
 test("finance snapshot aggregates authorized data and omits sensitive labels", () => {
   const data: DashboardData = {
-    asOf: "2026-08-28", aiConfigured: true, userName: "private-email", household: { id: "house", name: "Private Household", currency: "USD", taxRate: 0 },
+    asOf: "2026-08-28", aiConfigured: true, userName: "private-email", language: "en", household: { id: "house", name: "Private Household", currency: "USD", taxRate: 0 },
     accounts: [{ id: "account", name: "Secret Bank Name", kind: "bank", currency: "USD", openingBalance: 0, balance: 1_200, visibility: "private", creditLimit: null }],
-    categories: [], transactions: [],
+    categories: [], transactions: [], ownedExpenses: [],
     reportTransactions: [{ occurredOn: "2026-08-20", kind: "expense", amount: 75, currency: "USD", reportingExchangeRate: 1, category: "Groceries" }],
     shoppingLists: [], goals: [{ id: "goal", name: "Sensitive goal name", target: 2_000, current: 500, currency: "USD", targetDate: null, visibility: "private" }], debts: [], budgets: [], recurring: [],
   };
@@ -67,4 +68,11 @@ test("assistant output normalization strips null bytes and enforces a response c
   assert.equal(normalizeAssistantText("  safe\0 answer  "), "safe answer");
   assert.equal(normalizeAssistantText("x".repeat(7_000))?.length, 6_000);
   assert.equal(normalizeAssistantText(null), null);
+});
+
+test("workspace language preference localizes core navigation and date formatting", () => {
+  assert.equal(translate("es", "Settings"), "Ajustes");
+  assert.equal(translate("es", "Post Transaction"), "Registrar movimiento");
+  assert.equal(translate("en", "Settings"), "Settings");
+  assert.equal(localeFor("es"), "es-CO");
 });

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createHousehold } from "../actions/finance";
+import LaundryMark from "../laundry-mark";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function OnboardingPage() {
   }
 
   return <main className="auth-page auth-experience"><div className="auth-atmosphere" aria-hidden="true"><div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" /><div className="auth-coin auth-coin-one">$</div><div className="auth-coin auth-coin-two">%</div><div className="auth-coin auth-coin-three">+</div></div><div className="auth-grid"><section className="auth-intro">
-    <div className="auth-brand"><span aria-hidden="true">L</span> <strong translate="no">Laundry</strong></div><p className="eyebrow">YOUR SHARED FINANCIAL SPACE</p>
+    <div className="auth-brand"><LaundryMark className="auth-brand-mark" /> <strong translate="no">Laundry</strong></div><p className="eyebrow">YOUR SHARED FINANCIAL SPACE</p>
     <h1>A household is more than an <em>account.</em></h1><p>Give this space a name. You will be the owner, with full control over who joins and what stays private.</p>
     <div className="auth-points"><span>Invite on your terms</span><span>Multiple currencies</span><span>Clear audit trail</span></div>
   </section><section className="auth-card">
