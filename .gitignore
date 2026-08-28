@@ -1,0 +1,25 @@
+node_modules
+.next
+.env*.local
+coverage
+.pnpm-store
+*.tsbuildinfo
+
+# === Added by security-skill ===
+.env
+.env.local
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+.skills/
+.env.development
+.env.staging
+.env.production
+.env.*.local
+*.p12
+*.pfx
+*.cert
+*.crt
+.secrets
