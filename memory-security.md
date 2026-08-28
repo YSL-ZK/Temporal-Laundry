@@ -7,7 +7,7 @@
 - detected_stacks: [Next.js 16, React 19, TypeScript, pnpm]
 - deployment_platforms: [Vercel]
 - databases: [Supabase Postgres]
-- has_ai_features: false
+- has_ai_features: true
 - compliance_mode: none  # none | gdpr | hipaa | pci-dss | soc2
 - environment: prod   # dev | staging | prod
 
@@ -69,3 +69,5 @@ secrets: {}
 - 2026-08-28: Added an explicit authenticated sign-out control using the browser-safe Supabase client with local-session scope. UI review found no new secret exposure, raw HTML/code execution, or preview-route bypass; lint, TypeScript, unit tests, and the production build pass.
 - 2026-08-28: Added a deliberately narrow PWA service worker. It never caches navigation responses or household/API data, only same-origin versioned static assets and a non-sensitive offline page; registration requires a production secure context.
 - 2026-08-28: Added an authenticated, RLS-scoped transaction CSV export with a 5,000-row bound, private/no-store response headers, fixed filenames, and spreadsheet-formula injection protection. Regression tests cover escaping. Dependency audit reports zero known vulnerabilities.
+- 2026-08-28: Added the read-only Laundry Guide finance assistant. Model credentials remain server-only; RLS-authorized context is aggregated and excludes raw transaction descriptions, account/household names, payees, emails, notes, and receipts. The model has no tools or write path. Same-origin, body/history/output limits, finance-scope screening, timeout handling, free-model allowlisting, and atomic database-backed user/household/project quotas limit prompt-injection, account farming, and cost abuse. Laundry stores usage metadata only, not prompts or answers.
+- 2026-08-28: Applied migrations 20260828093746 and 20260828095339 to the linked Supabase project. Browser roles have explicit table/function revocations; service role alone reserves and completes quota events, and a trigger atomically enforces the project-wide daily ceiling. Hosted Security Advisor reports no new AI finding (the Free-plan leaked-password warning remains), and Performance Advisor still reports the pre-existing duplicate household-membership SELECT policies.

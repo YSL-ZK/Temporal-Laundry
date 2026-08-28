@@ -3,6 +3,7 @@ import { createClient } from "./supabase/server";
 
 export type DashboardData = {
   asOf: string;
+  aiConfigured: boolean;
   userName: string;
   household: { id: string; name: string; currency: string; taxRate: number } | null;
   accounts: Array<{ id: string; name: string; kind: string; currency: string; openingBalance: number; balance: number; visibility: "private" | "shared"; creditLimit: number | null }>;
@@ -20,11 +21,12 @@ const numeric = (value: unknown) => Number(value ?? 0);
 
 export async function loadDashboard(): Promise<DashboardData | null> {
   const asOf = new Date().toISOString().slice(0, 10);
+  const aiConfigured = Boolean(process.env.GROQ_API_KEY?.trim());
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const { data: membership } = await supabase.from("household_members").select("household_id").limit(1).maybeSingle();
-  if (!membership) return { asOf, userName: user.email?.split("@")[0] ?? "there", household: null, accounts: [], categories: [], transactions: [], reportTransactions: [], shoppingLists: [], goals: [], debts: [], budgets: [], recurring: [] };
+  if (!membership) return { asOf, aiConfigured, userName: user.email?.split("@")[0] ?? "there", household: null, accounts: [], categories: [], transactions: [], reportTransactions: [], shoppingLists: [], goals: [], debts: [], budgets: [], recurring: [] };
   const householdId = membership.household_id;
   const reportingStart = new Date();
   reportingStart.setUTCMonth(reportingStart.getUTCMonth() - 11, 1);
@@ -50,6 +52,7 @@ export async function loadDashboard(): Promise<DashboardData | null> {
   for (const entry of entriesResult.data ?? []) balances.set(entry.account_id, (balances.get(entry.account_id) ?? 0) + numeric(entry.amount));
   return {
     asOf,
+    aiConfigured,
     userName: user.email?.split("@")[0] ?? "there",
     household: household ? { id: household.id, name: household.name, currency: household.reporting_currency, taxRate: numeric(household.default_tax_rate) } : null,
     accounts: (accountsResult.data ?? []).map((row) => ({ id: row.id, name: row.name, kind: row.kind, currency: row.currency, openingBalance: numeric(row.opening_balance), balance: numeric(row.opening_balance) + (balances.get(row.id) ?? 0), visibility: row.visibility, creditLimit: row.credit_limit === null ? null : numeric(row.credit_limit) })),
