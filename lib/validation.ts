@@ -24,6 +24,8 @@ export const transactionSchema = z.object({
   accountId: uuidSchema,
   transferAccountId: uuidSchema.optional(),
   categoryId: uuidSchema.optional(),
+  payeeId: uuidSchema.optional(),
+  tagIds: z.array(uuidSchema).max(12).default([]),
   kind: z.enum(["income", "expense", "transfer", "adjustment"]),
   amount: moneySchema.positive(),
   currency: currencySchema,
@@ -95,6 +97,26 @@ export const householdSchema = z.object({
 });
 
 export const categorySchema = z.object({ householdId: uuidSchema, name: z.string().trim().min(1).max(80), kind: z.enum(["income", "expense"]), color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional() });
+export const payeeSchema = z.object({ householdId: uuidSchema, name: z.string().trim().min(1).max(120) });
+export const tagSchema = z.object({ householdId: uuidSchema, name: z.string().trim().min(1).max(40), color: z.string().trim().toLowerCase().regex(/^#[0-9a-f]{6}$/) });
+export const transactionSearchSchema = z.object({
+  householdId: uuidSchema,
+  query: z.string().trim().max(80).optional(),
+  kind: z.enum(["income", "expense", "transfer", "adjustment"]).optional(),
+  accountId: uuidSchema.optional(),
+  categoryId: uuidSchema.optional(),
+  payeeId: uuidSchema.optional(),
+  tagId: uuidSchema.optional(),
+  visibility: visibilitySchema.optional(),
+  status: z.enum(["posted", "projected"]).optional(),
+  dateFrom: z.string().date().optional(),
+  dateTo: z.string().date().optional(),
+  minAmount: moneySchema.optional(),
+  maxAmount: moneySchema.optional(),
+}).superRefine((value, context) => {
+  if (value.dateFrom && value.dateTo && value.dateFrom > value.dateTo) context.addIssue({ code: "custom", path: ["dateTo"], message: "End date must be on or after start date" });
+  if (value.minAmount !== undefined && value.maxAmount !== undefined && value.minAmount > value.maxAmount) context.addIssue({ code: "custom", path: ["maxAmount"], message: "Maximum amount must be at least the minimum amount" });
+});
 export const goalSchema = z.object({ householdId: uuidSchema, name: z.string().trim().min(1).max(100), targetAmount: moneySchema.positive(), currency: currencySchema, targetDate: z.string().date().optional(), visibility: visibilitySchema });
 export const debtSchema = z.object({ householdId: uuidSchema, creditor: z.string().trim().min(1).max(120), balance: moneySchema.positive(), currency: currencySchema, interestRate: z.coerce.number().min(0).max(100).optional(), minimumPayment: moneySchema.optional(), dueDay: z.coerce.number().int().min(1).max(31).optional(), accountId: uuidSchema.optional(), visibility: visibilitySchema });
 export const budgetSchema = z.object({ householdId: uuidSchema, categoryId: uuidSchema.optional(), month: z.string().date(), amount: moneySchema, envelopeAmount: moneySchema.default(0), currency: currencySchema, visibility: visibilitySchema });

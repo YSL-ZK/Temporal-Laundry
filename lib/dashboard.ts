@@ -9,7 +9,9 @@ export type DashboardData = {
   household: { id: string; name: string; currency: string; taxRate: number } | null;
   accounts: Array<{ id: string; name: string; kind: string; currency: string; openingBalance: number; balance: number; visibility: "private" | "shared"; creditLimit: number | null }>;
   categories: Array<{ id: string; name: string; kind: "income" | "expense"; color: string | null }>;
-  transactions: Array<{ id: string; occurredOn: string; kind: string; amount: number; currency: string; accountId: string; category: string | null; payee: string | null; visibility: "private" | "shared" }>;
+  payees: Array<{ id: string; name: string }>;
+  tags: Array<{ id: string; name: string; color: string }>;
+  transactions: Array<{ id: string; occurredOn: string; kind: string; status: string; amount: number; currency: string; accountId: string; account: string | null; category: string | null; payeeId: string | null; payee: string | null; visibility: "private" | "shared"; tags: Array<{ id: string; name: string; color: string }> }>;
   ownedExpenses: Array<{ id: string; occurredOn: string; amount: number; currency: string; account: string; category: string | null; payee: string | null; visibility: "private" | "shared" }>;
   reportTransactions: Array<{ occurredOn: string; kind: "income" | "expense"; amount: number; currency: string; reportingExchangeRate: number; category: string | null }>;
   shoppingLists: Array<{ id: string; name: string; currency: string; visibility: "private" | "shared"; taxRate: number; status: string; discount: number; shipping: number; tip: number; items: Array<{ id: string; name: string; quantity: number; estimatedPrice: number; actualPrice: number | null; bought: boolean; taxRate: number | null; fixedTax: number | null; categoryId: string | null }> }>;
@@ -28,16 +30,18 @@ export async function loadDashboard(): Promise<DashboardData | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const { data: membership } = await supabase.from("household_members").select("household_id").limit(1).maybeSingle();
-  if (!membership) return { asOf, aiConfigured, userName: user.email?.split("@")[0] ?? "there", language: "en", household: null, accounts: [], categories: [], transactions: [], ownedExpenses: [], reportTransactions: [], shoppingLists: [], goals: [], debts: [], budgets: [], recurring: [] };
+  if (!membership) return { asOf, aiConfigured, userName: user.email?.split("@")[0] ?? "there", language: "en", household: null, accounts: [], categories: [], payees: [], tags: [], transactions: [], ownedExpenses: [], reportTransactions: [], shoppingLists: [], goals: [], debts: [], budgets: [], recurring: [] };
   const householdId = membership.household_id;
   const reportingStart = new Date();
   reportingStart.setUTCMonth(reportingStart.getUTCMonth() - 11, 1);
-  const [profileResult, householdResult, accountsResult, categoriesResult, transactionsResult, ownedExpensesResult, reportTransactionsResult, listsResult, goalsResult, debtsResult, budgetsResult, recurringResult, entriesResult] = await Promise.all([
+  const [profileResult, householdResult, accountsResult, categoriesResult, payeesResult, tagsResult, transactionsResult, ownedExpensesResult, reportTransactionsResult, listsResult, goalsResult, debtsResult, budgetsResult, recurringResult, entriesResult] = await Promise.all([
     supabase.from("profiles").select("display_name,preferred_language").eq("id", user.id).single(),
     supabase.from("households").select("id,name,reporting_currency,default_tax_rate").eq("id", householdId).single(),
     supabase.from("accounts").select("id,name,kind,currency,opening_balance,visibility,credit_limit").eq("household_id", householdId).is("archived_at", null).order("name"),
     supabase.from("categories").select("id,name,kind,color").eq("household_id", householdId).order("name"),
-    supabase.from("transactions").select("id,occurred_on,kind,amount,currency,account_id,visibility,payee,categories(name)").eq("household_id", householdId).eq("status", "posted").is("voided_at", null).order("occurred_on", { ascending: false }).limit(50),
+    supabase.from("payees").select("id,name").eq("household_id", householdId).order("name"),
+    supabase.from("tags").select("id,name,color").eq("household_id", householdId).order("name"),
+    supabase.from("transactions").select("id,occurred_on,kind,status,amount,currency,account_id,visibility,payee,payee_id,categories(name),accounts(name),transaction_tags(tags(id,name,color))").eq("household_id", householdId).eq("status", "posted").is("voided_at", null).order("occurred_on", { ascending: false }).limit(50),
     supabase.from("transactions").select("id,occurred_on,amount,currency,visibility,payee,categories(name),accounts(name)").eq("household_id", householdId).eq("owner_id", user.id).eq("kind", "expense").eq("status", "posted").is("voided_at", null).order("occurred_on", { ascending: false }).limit(100),
     supabase.from("transactions").select("occurred_on,kind,amount,currency,reporting_exchange_rate,categories(name)").eq("household_id", householdId).eq("status", "posted").is("voided_at", null).in("kind", ["income", "expense"]).gte("occurred_on", reportingStart.toISOString().slice(0, 10)).order("occurred_on").limit(5000),
     supabase.from("shopping_lists").select("id,name,currency,visibility,default_tax_rate,discount,shipping,tip,status,shopping_items(id,name,quantity,estimated_price,actual_price,bought,tax_rate,fixed_tax,category_id)").eq("household_id", householdId).order("created_at", { ascending: false }),
@@ -63,7 +67,17 @@ export async function loadDashboard(): Promise<DashboardData | null> {
     household: household ? { id: household.id, name: household.name, currency: household.reporting_currency, taxRate: numeric(household.default_tax_rate) } : null,
     accounts: (accountsResult.data ?? []).map((row) => ({ id: row.id, name: row.name, kind: row.kind, currency: row.currency, openingBalance: numeric(row.opening_balance), balance: numeric(row.opening_balance) + (balances.get(row.id) ?? 0), visibility: row.visibility, creditLimit: row.credit_limit === null ? null : numeric(row.credit_limit) })),
     categories: (categoriesResult.data ?? []).map((row) => ({ id: row.id, name: row.name, kind: row.kind as "income" | "expense", color: row.color })),
-    transactions: (transactionsResult.data ?? []).map((row) => { const category = Array.isArray(row.categories) ? row.categories[0] : row.categories; return { id: row.id, occurredOn: row.occurred_on, kind: row.kind, amount: numeric(row.amount), currency: row.currency, accountId: row.account_id, category: (category as { name: string } | null)?.name ?? null, payee: row.payee, visibility: row.visibility }; }),
+    payees: (payeesResult.data ?? []).map((row) => ({ id: row.id, name: row.name })),
+    tags: (tagsResult.data ?? []).map((row) => ({ id: row.id, name: row.name, color: row.color ?? "#7dd3a7" })),
+    transactions: (transactionsResult.data ?? []).map((row) => {
+      const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+      const account = Array.isArray(row.accounts) ? row.accounts[0] : row.accounts;
+      const tags = (row.transaction_tags ?? []).flatMap((link) => {
+        const tag = Array.isArray(link.tags) ? link.tags[0] : link.tags;
+        return tag ? [{ id: tag.id, name: tag.name, color: tag.color ?? "#7dd3a7" }] : [];
+      });
+      return { id: row.id, occurredOn: row.occurred_on, kind: row.kind, status: row.status, amount: numeric(row.amount), currency: row.currency, accountId: row.account_id, account: (account as { name: string } | null)?.name ?? null, category: (category as { name: string } | null)?.name ?? null, payeeId: row.payee_id, payee: row.payee, visibility: row.visibility, tags };
+    }),
     ownedExpenses: (ownedExpensesResult.data ?? []).map((row) => {
       const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
       const account = Array.isArray(row.accounts) ? row.accounts[0] : row.accounts;

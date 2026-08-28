@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "../../lib/supabase/admin";
 import { createClient } from "../../lib/supabase/server";
-import { accountSchema, budgetEnvelopeSchema, budgetSchema, categorySchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, profileLanguageSchema, recurringConfirmSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, transactionSchema, uuidSchema, voidExpenseSchema } from "../../lib/validation";
+import type { DashboardData } from "../../lib/dashboard";
+import { accountSchema, budgetEnvelopeSchema, budgetSchema, categorySchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, payeeSchema, profileLanguageSchema, recurringConfirmSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, tagSchema, transactionSchema, transactionSearchSchema, uuidSchema, voidExpenseSchema } from "../../lib/validation";
 
 type ActionResult<T = void> = { data?: T; error?: string };
 
@@ -25,6 +26,24 @@ function actionError(error: unknown): { error: string } {
     return { error: "This deployment is not connected to Supabase correctly. Its administrator must add a valid server secret in Vercel and redeploy." };
   }
   return { error: "We couldn't complete that request. Please try again." };
+}
+
+type TransactionQueryRow = {
+  id: string; occurred_on: string; kind: string; status: string; amount: unknown; currency: string;
+  account_id: string; visibility: "private" | "shared"; payee: string | null; payee_id: string | null;
+  categories: { name: string } | Array<{ name: string }> | null;
+  accounts: { name: string } | Array<{ name: string }> | null;
+  transaction_tags: Array<{ tags: { id: string; name: string; color: string | null } | Array<{ id: string; name: string; color: string | null }> | null }>;
+};
+
+function mapTransaction(row: TransactionQueryRow): DashboardData["transactions"][number] {
+  const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+  const account = Array.isArray(row.accounts) ? row.accounts[0] : row.accounts;
+  const tags = (row.transaction_tags ?? []).flatMap((link) => {
+    const tag = Array.isArray(link.tags) ? link.tags[0] : link.tags;
+    return tag ? [{ id: tag.id, name: tag.name, color: tag.color ?? "#7dd3a7" }] : [];
+  });
+  return { id: row.id, occurredOn: row.occurred_on, kind: row.kind, status: row.status, amount: Number(row.amount ?? 0), currency: row.currency, accountId: row.account_id, account: account?.name ?? null, category: category?.name ?? null, payeeId: row.payee_id, payee: row.payee, visibility: row.visibility, tags };
 }
 
 export async function createHousehold(input: unknown): Promise<ActionResult<{ id: string }>> {
@@ -67,9 +86,10 @@ export async function postTransaction(input: unknown): Promise<ActionResult<{ id
   try {
     const value = transactionSchema.parse(input);
     const { user } = await authenticatedClient();
-    const { data, error } = await createAdminClient().rpc("post_transaction", {
+    const { data, error } = await createAdminClient().rpc("post_organized_transaction", {
       actor_id: user.id, target_household: value.householdId, source_account: value.accountId, target_account: value.transferAccountId ?? null,
-      target_category: value.categoryId ?? null, transaction_kind: value.kind, transaction_amount: value.amount,
+      target_category: value.categoryId ?? null, target_payee: value.payeeId ?? null, target_tags: value.tagIds,
+      transaction_kind: value.kind, transaction_amount: value.amount,
       transaction_currency: value.currency, transaction_rate: value.reportingExchangeRate, transaction_date: value.occurredOn,
       transaction_visibility: value.visibility, transaction_payee: value.payee ?? null, transaction_note: value.note ?? null,
       transaction_items: value.items.map((item) => ({ categoryId: item.categoryId ?? null, name: item.name, quantity: item.quantity, unitPrice: item.unitPrice, discount: item.discount, tax: item.tax })),
@@ -77,6 +97,69 @@ export async function postTransaction(input: unknown): Promise<ActionResult<{ id
     if (error || !data) throw error ?? new Error("Transaction was not posted");
     revalidatePath("/");
     return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function createPayee(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = payeeSchema.parse(input);
+    const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("create_payee", { actor_id: user.id, target_household: value.householdId, payee_name: value.name });
+    if (error || !data) throw error ?? new Error("Payee was not created");
+    revalidatePath("/");
+    return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function createTag(input: unknown): Promise<ActionResult<{ id: string }>> {
+  try {
+    const value = tagSchema.parse(input);
+    const { user } = await authenticatedClient();
+    const { data, error } = await createAdminClient().rpc("create_tag", { actor_id: user.id, target_household: value.householdId, tag_name: value.name, tag_color: value.color });
+    if (error || !data) throw error ?? new Error("Tag was not created");
+    revalidatePath("/");
+    return { data: { id: data } };
+  } catch (error) { return actionError(error); }
+}
+
+export async function searchTransactions(input: unknown): Promise<ActionResult<DashboardData["transactions"]>> {
+  try {
+    const value = transactionSearchSchema.parse(input);
+    const { supabase } = await authenticatedClient();
+    const { data: membership, error: membershipError } = await supabase.from("household_members").select("household_id").eq("household_id", value.householdId).maybeSingle();
+    if (membershipError || !membership) throw membershipError ?? new Error("Household access denied");
+
+    let allowedIds: string[] | null = null;
+    if (value.query) {
+      const { data: matches, error: searchError } = await supabase.rpc("search_transaction_ids", { target_household: value.householdId, search_query: value.query });
+      if (searchError) throw searchError;
+      allowedIds = (matches ?? []).map((match: { transaction_id: string }) => match.transaction_id);
+    }
+    if (value.tagId) {
+      const { data: tagLinks, error: tagError } = await supabase.from("transaction_tags").select("transaction_id").eq("tag_id", value.tagId).limit(500);
+      if (tagError) throw tagError;
+      const taggedIds = new Set((tagLinks ?? []).map((link) => link.transaction_id));
+      allowedIds = allowedIds === null ? [...taggedIds] : allowedIds.filter((id) => taggedIds.has(id));
+    }
+    if (allowedIds?.length === 0) return { data: [] };
+
+    let query = supabase.from("transactions")
+      .select("id,occurred_on,kind,status,amount,currency,account_id,visibility,payee,payee_id,categories(name),accounts(name),transaction_tags(tags(id,name,color))")
+      .eq("household_id", value.householdId).is("voided_at", null);
+    if (allowedIds) query = query.in("id", allowedIds);
+    if (value.kind) query = query.eq("kind", value.kind);
+    if (value.accountId) query = query.eq("account_id", value.accountId);
+    if (value.categoryId) query = query.eq("category_id", value.categoryId);
+    if (value.payeeId) query = query.eq("payee_id", value.payeeId);
+    if (value.visibility) query = query.eq("visibility", value.visibility);
+    if (value.status) query = query.eq("status", value.status);
+    if (value.dateFrom) query = query.gte("occurred_on", value.dateFrom);
+    if (value.dateTo) query = query.lte("occurred_on", value.dateTo);
+    if (value.minAmount !== undefined) query = query.gte("amount", value.minAmount);
+    if (value.maxAmount !== undefined) query = query.lte("amount", value.maxAmount);
+    const { data, error } = await query.order("occurred_on", { ascending: false }).order("created_at", { ascending: false }).limit(100);
+    if (error) throw error;
+    return { data: (data ?? []).map((row) => mapTransaction(row as TransactionQueryRow)) };
   } catch (error) { return actionError(error); }
 }
 

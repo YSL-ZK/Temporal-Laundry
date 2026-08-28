@@ -28,7 +28,7 @@ This roadmap extends the original full-product plan. A checked item is implement
 
 - [ ] Create a separate Groq project/key for each deployment environment and enable Groq Zero Data Retention.
 - [ ] Add `GROQ_API_KEY`, optional `GROQ_MODEL`, and the existing Supabase service-role secret to Vercel; never expose them with a `NEXT_PUBLIC_` prefix.
-- [ ] Apply the AI quota migration and rerun Supabase Security and Performance Advisors.
+- [x] Apply the AI quota migration and rerun Supabase Security and Performance Advisors.
 - [x] Add an in-product consent notice describing which summaries leave Supabase and which inference provider processes them.
 - [ ] Add deletion/privacy documentation and a provider outage status message before public launch.
 - [ ] Add integration tests for authentication, RLS context isolation, parallel quota attempts, daily reset, provider timeout, malformed output, and prompt-injection cases.
@@ -49,8 +49,8 @@ The assistant is intentionally not a general agent. Users cannot choose arbitrar
 
 ### Transactions and records
 
-- [ ] Add payee and tag management plus transaction assignment.
-- [ ] Add full search/filtering across dates, accounts, categories, payees, tags, amounts, visibility, and status.
+- [x] Add payee and tag management plus transaction assignment.
+- [x] Add full search/filtering across dates, accounts, categories, payees, tags, amounts, visibility, and status.
 - [ ] Add receipt browser/download/delete UI with storage-policy integration.
 - [ ] Add transaction detail, edit/draft/reversal workflows while preserving posted-ledger audit history.
 - [x] Add creator-only expense voiding with immutable audit history and active-balance/report/export recalculation.

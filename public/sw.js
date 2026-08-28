@@ -1,6 +1,6 @@
-const CACHE_NAME = "laundry-shell-v1";
+const CACHE_NAME = "laundry-shell-v2";
 const OFFLINE_URL = "/offline";
-const SHELL_ASSETS = [OFFLINE_URL, "/pwa-icon/192", "/pwa-icon/512"];
+const SHELL_ASSETS = [OFFLINE_URL, "/pwa-icon/192?v=orbit-ledger-2", "/pwa-icon/512?v=orbit-ledger-2", "/pwa-icon/512?v=orbit-ledger-maskable-2"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)).then(() => self.skipWaiting()));

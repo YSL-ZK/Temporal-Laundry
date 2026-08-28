@@ -4,6 +4,7 @@ import { debtPayoffMonths, formula, shoppingTotals, type ShoppingList } from "..
 import { csvCell, csvRow } from "../lib/csv";
 import { buildFinanceSnapshot, checkFinanceQuestion, financeChatRequestSchema, normalizeAssistantText } from "../lib/finance-ai";
 import { localeFor, translate } from "../lib/i18n";
+import { tagSchema, transactionSchema, transactionSearchSchema } from "../lib/validation";
 import type { DashboardData } from "../lib/dashboard";
 
 const list: ShoppingList = { id: "list", name: "Test", scope: "shared", currency: "USD", defaultTaxRate: 10, discount: 4, shipping: 2, tip: 0, status: "open", items: [
@@ -54,7 +55,7 @@ test("finance snapshot aggregates authorized data and omits sensitive labels", (
   const data: DashboardData = {
     asOf: "2026-08-28", aiConfigured: true, userName: "private-email", language: "en", household: { id: "house", name: "Private Household", currency: "USD", taxRate: 0 },
     accounts: [{ id: "account", name: "Secret Bank Name", kind: "bank", currency: "USD", openingBalance: 0, balance: 1_200, visibility: "private", creditLimit: null }],
-    categories: [], transactions: [], ownedExpenses: [],
+    categories: [], payees: [], tags: [], transactions: [], ownedExpenses: [],
     reportTransactions: [{ occurredOn: "2026-08-20", kind: "expense", amount: 75, currency: "USD", reportingExchangeRate: 1, category: "Groceries" }],
     shoppingLists: [], goals: [{ id: "goal", name: "Sensitive goal name", target: 2_000, current: 500, currency: "USD", targetDate: null, visibility: "private" }], debts: [], budgets: [], recurring: [],
   };
@@ -75,4 +76,19 @@ test("workspace language preference localizes core navigation and date formattin
   assert.equal(translate("es", "Post Transaction"), "Registrar movimiento");
   assert.equal(translate("en", "Settings"), "Settings");
   assert.equal(localeFor("es"), "es-CO");
+});
+
+test("transaction organization validates reusable payees and bounded tags", () => {
+  const base = { householdId: "11111111-1111-4111-8111-111111111111", accountId: "22222222-2222-4222-8222-222222222222", kind: "expense", amount: 10, currency: "USD", reportingExchangeRate: 1, occurredOn: "2026-08-28", visibility: "private", items: [] };
+  assert.equal(transactionSchema.safeParse({ ...base, tagIds: Array.from({ length: 12 }, (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`) }).success, true);
+  assert.equal(transactionSchema.safeParse({ ...base, tagIds: Array.from({ length: 13 }, (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`) }).success, false);
+  assert.equal(tagSchema.safeParse({ householdId: base.householdId, name: "Reimbursable", color: "#7dd3a7" }).success, true);
+  assert.equal(tagSchema.safeParse({ householdId: base.householdId, name: "Bad", color: "mint" }).success, false);
+});
+
+test("ledger filters reject inverted date and amount ranges", () => {
+  const householdId = "11111111-1111-4111-8111-111111111111";
+  assert.equal(transactionSearchSchema.safeParse({ householdId, dateFrom: "2026-08-01", dateTo: "2026-08-31", minAmount: 10, maxAmount: 100 }).success, true);
+  assert.equal(transactionSearchSchema.safeParse({ householdId, dateFrom: "2026-09-01", dateTo: "2026-08-31" }).success, false);
+  assert.equal(transactionSearchSchema.safeParse({ householdId, minAmount: 100, maxAmount: 10 }).success, false);
 });

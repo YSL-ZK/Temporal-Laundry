@@ -13,6 +13,6 @@ export async function GET(_request: Request, context: { params: Promise<{ size: 
       <div style={{ position: "absolute", display: "flex", width: "56%", height: "56%", border: "2px solid rgba(158,176,255,.2)", borderRadius: "50%" }} />
       <div style={{ display: "flex", width: "52%", height: "52%", alignItems: "center", justifyContent: "center", border: "2px solid rgba(255,255,255,.35)", borderRadius: "30%", background: "#b8f5d2", boxShadow: "0 24px 70px rgba(80,220,150,.28)", color: "#09291d" }}><LaundryMarkSvg style={{ width: requestedSize * 0.43, height: requestedSize * 0.43 }} /></div>
     </div>,
-    { width: requestedSize, height: requestedSize, headers: { "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800" } },
+    { width: requestedSize, height: requestedSize, headers: { "Cache-Control": "public, max-age=31536000, immutable" } },
   );
 }
