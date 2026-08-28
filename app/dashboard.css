@@ -343,6 +343,75 @@
 .dashboard-surface .checkout-total { background: rgb(184 245 210 / 0.09); color: var(--vault-secondary); }
 .dashboard-surface .checkout-total strong { color: var(--mint); }
 
+/* Operational views share the same hierarchy and control density as the overview. */
+.dashboard-surface .stack-page,
+.dashboard-surface .plans-page,
+.reports-page { width: min(82rem, 100%); }
+.dashboard-surface .wide-card { padding: clamp(1.35rem, 2.5vw, 2rem); }
+.dashboard-surface .wide-card > h2,
+.dashboard-surface .section-head h2 { margin: 0; color: var(--vault-ink); font-size: clamp(1.1rem, 1.8vw, 1.45rem); font-weight: 690; line-height: 1.1; letter-spacing: -0.045em; }
+.dashboard-surface .wide-card > h2 + .form-grid,
+.dashboard-surface .section-head + .form-grid { margin-top: 1.5rem; padding-top: 1.35rem; border-top: 1px solid var(--vault-line); }
+.dashboard-surface .form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.dashboard-surface .form-grid label { min-width: 0; gap: 0.45rem; font-size: 0.68rem; }
+.dashboard-surface .form-grid input,
+.dashboard-surface .form-grid select { min-width: 0; min-height: 3rem; border-radius: 0.72rem; padding: 0.7rem 0.8rem; }
+.dashboard-surface .form-grid .full,
+.dashboard-surface .form-grid .form-note,
+.dashboard-surface .form-grid .submit-button { grid-column: 1 / -1; }
+.dashboard-surface .form-grid .submit-button { width: fit-content; min-width: 11rem; }
+.dashboard-surface .stack-page > .wide-card:first-child,
+.dashboard-surface .plans-page > .wide-card:first-child { background: linear-gradient(145deg, rgb(17 40 48 / 0.92), rgb(12 27 35 / 0.86)); }
+.dashboard-surface .stack-page > .wide-card > p:not(.muted) { color: var(--vault-secondary); line-height: 1.65; }
+
+.install-card { display: flex; align-items: center; gap: 1rem; }
+.install-glyph { display: grid; width: 3.2rem; height: 3.2rem; flex: 0 0 auto; place-items: center; border-radius: 1rem; background: rgb(184 245 210 / 0.09); color: var(--mint); }
+.install-glyph svg { width: 1.5rem; height: 1.5rem; }
+.install-card .eyebrow { margin: 0 0 0.35rem; color: var(--mint-strong); }
+.install-card h2 { margin: 0; }
+.install-card .muted { margin-top: 0.4rem; line-height: 1.55; }
+.install-card .add-button { flex: 0 0 auto; }
+.install-card .add-button svg { width: 1rem; height: 1rem; }
+
+.reports-page { display: grid; gap: 1rem; animation: dashboard-rise 550ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.report-hero { display: flex; min-height: 14rem; align-items: flex-end; justify-content: space-between; gap: 2rem; overflow: hidden; padding: clamp(1.6rem, 3.5vw, 2.8rem); border: 1px solid rgb(184 245 210 / 0.16); border-radius: 1.6rem; background: radial-gradient(circle at 82% 35%, rgb(121 223 169 / 0.16), transparent 19rem), rgb(14 35 42 / 0.9); box-shadow: inset 0 1px rgb(255 255 255 / 0.045); }
+.report-hero .eyebrow { margin: 0; color: var(--mint-strong); }
+.report-hero h2 { margin: 0.75rem 0 0; color: var(--vault-ink); font-size: clamp(2.7rem, 6vw, 5.3rem); font-weight: 680; line-height: 0.95; letter-spacing: -0.07em; font-variant-numeric: tabular-nums; }
+.report-hero p:not(.eyebrow) { max-width: 35rem; margin: 0.8rem 0 0; color: var(--vault-secondary); line-height: 1.55; text-wrap: pretty; }
+.report-export { display: inline-flex; min-height: 3rem; flex: 0 0 auto; align-items: center; gap: 0.55rem; padding: 0.7rem 0.95rem; border: 1px solid var(--vault-line-strong); border-radius: 0.82rem; background: rgb(255 255 255 / 0.045); color: var(--mint); font-size: 0.72rem; font-weight: 760; text-decoration: none; transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), border-color 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms cubic-bezier(0.23, 1, 0.32, 1); }
+.report-export:hover { border-color: rgb(184 245 210 / 0.38); background: rgb(184 245 210 / 0.08); transform: translateY(-2px); }
+.report-export:active { transform: scale(0.97); }
+.report-export svg { width: 1rem; height: 1rem; }
+.report-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr); gap: 1rem; }
+.report-flow { min-height: 27rem; }
+.flow-chart { display: grid; min-height: 17rem; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: end; gap: clamp(0.45rem, 1.6vw, 1rem); margin-top: 1rem; }
+.flow-month { display: grid; min-width: 0; justify-items: center; gap: 0.4rem; }
+.flow-bars { display: flex; width: 100%; height: 12rem; align-items: flex-end; justify-content: center; gap: 0.25rem; border-bottom: 1px solid var(--vault-line); }
+.flow-bars i { display: block; width: min(1rem, 35%); min-height: 0.2rem; border-radius: 0.3rem 0.3rem 0.08rem 0.08rem; }
+.income-bar { background: var(--mint-strong); }
+.expense-bar { background: var(--danger); opacity: 0.72; }
+.flow-month > strong { color: var(--vault-secondary); font-size: 0.62rem; }
+.flow-month > span { overflow: hidden; width: 100%; color: var(--vault-muted); font-size: 0.52rem; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.report-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; color: var(--vault-secondary); font-size: 0.62rem; }
+.report-legend span { display: flex; align-items: center; gap: 0.4rem; }
+.report-legend i { width: 0.45rem; height: 0.45rem; border-radius: 50%; }
+.income-dot { background: var(--mint-strong); }
+.expense-dot { background: var(--danger); }
+.category-report-list { display: grid; gap: 1rem; margin-top: 1.3rem; }
+.category-report-row > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.category-report-row strong { overflow: hidden; color: var(--vault-ink); font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+.category-report-row span { color: var(--vault-secondary); font-size: 0.62rem; font-variant-numeric: tabular-nums; }
+.category-report-track { height: 0.28rem; margin-top: 0.45rem; overflow: hidden; border-radius: 99rem; background: rgb(255 255 255 / 0.06); }
+.category-report-track i { display: block; height: 100%; border-radius: inherit; background: var(--periwinkle); }
+.report-position { grid-column: 1 / -1; }
+.position-value strong,
+.position-value span { display: block; }
+.position-value strong { color: var(--vault-ink); font-size: clamp(2.2rem, 4vw, 4rem); letter-spacing: -0.065em; font-variant-numeric: tabular-nums; }
+.position-value span { margin-top: 0.35rem; color: var(--vault-muted); font-size: 0.66rem; }
+.position-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; margin-top: 1.5rem; }
+.position-facts span { padding: 0.8rem; border: 1px solid var(--vault-line); border-radius: 0.8rem; background: rgb(255 255 255 / 0.022); color: var(--vault-muted); font-size: 0.62rem; }
+.position-facts strong { display: block; margin-bottom: 0.18rem; color: var(--vault-ink); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+
 .ledger-app button:focus-visible,
 .ledger-app input:focus-visible,
 .ledger-app select:focus-visible,
@@ -358,6 +427,7 @@
   .ledger-app .dashboard-surface { margin-left: 14.5rem; padding-inline: 1.5rem; }
   .balance-stage { grid-template-columns: minmax(0, 1.15fr) minmax(13rem, 0.85fr); }
   .overview-grid { grid-template-columns: 1fr 1fr; }
+  .dashboard-surface .form-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 56rem) {
@@ -384,6 +454,8 @@
   .balance-orbit { position: absolute; right: -1rem; bottom: -3rem; width: 18rem; opacity: 0.72; }
   .balance-copy { max-width: 34rem; }
   .signal-strip { grid-template-columns: 1fr 1fr 1fr; }
+  .report-grid { grid-template-columns: 1fr; }
+  .report-position { grid-column: 1; }
 }
 
 @media (max-width: 40rem) {
@@ -403,6 +475,16 @@
   .dashboard-panel { padding: 1.1rem; }
   .panel-heading { align-items: flex-start; }
   .panel-link { margin-top: -0.5rem; }
+  .dashboard-surface .form-grid { grid-template-columns: 1fr; }
+  .dashboard-surface .form-grid .submit-button { width: 100%; }
+  .install-card,
+  .report-hero { align-items: flex-start; flex-direction: column; }
+  .install-card .add-button,
+  .report-export { width: 100%; justify-content: center; }
+  .report-hero h2 { font-size: clamp(2.5rem, 13vw, 4rem); }
+  .flow-chart { gap: 0.35rem; }
+  .flow-bars { height: 9rem; }
+  .position-facts { grid-template-columns: 1fr 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { debtPayoffMonths, formula, shoppingTotals, type ShoppingList } from "../lib/finance";
+import { csvCell, csvRow } from "../lib/csv";
 
 const list: ShoppingList = { id: "list", name: "Test", scope: "shared", currency: "USD", defaultTaxRate: 10, discount: 4, shipping: 2, tip: 0, status: "open", items: [
   { id: "one", name: "Taxable", quantity: 2, estimatedPrice: 10, category: "Shopping", bought: true },
@@ -27,4 +28,8 @@ test("debt payoff projection identifies amortizing and non-amortizing payments",
   assert.equal(debtPayoffMonths(1_000, 0, 100), 10);
   assert.equal(debtPayoffMonths(1_000, 24, 20), null);
   assert.ok((debtPayoffMonths(1_000, 24, 100) ?? 0) > 10);
+});
+test("CSV export escapes formulas, delimiters, and quotes", () => {
+  assert.equal(csvCell("=IMPORTXML(\"https://example.invalid\")"), "\"'=IMPORTXML(\"\"https://example.invalid\"\")\"");
+  assert.equal(csvRow(["Groceries, weekly", "quoted \"note\"", "+1"]), "\"Groceries, weekly\",\"quoted \"\"note\"\"\",\"'+1\"");
 });

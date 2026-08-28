@@ -41,7 +41,7 @@ export default function LoginPage() {
   }
 
   return <main className="auth-page auth-experience"><div className="auth-atmosphere" aria-hidden="true"><div className="auth-orbit auth-orbit-one" /><div className="auth-orbit auth-orbit-two" /><div className="auth-coin auth-coin-one">$</div><div className="auth-coin auth-coin-two">%</div><div className="auth-coin auth-coin-three">+</div></div><div className="auth-grid"><section className="auth-intro">
-    <div className="auth-brand"><span>L</span> Ledgerly</div><p className="eyebrow">SHARED FINANCE, WITHOUT THE FRICTION</p>
+    <div className="auth-brand"><span aria-hidden="true">L</span> <strong translate="no">Laundry</strong></div><p className="eyebrow">SHARED FINANCE, WITHOUT THE FRICTION</p>
     <h1>Money moves better in the <em>same orbit.</em></h1>
     <p>One calm place for the accounts you own, the plans you share, and the small decisions that add up.</p>
     <div className="auth-points"><span>Private by default</span><span>Shared when invited</span><span>Built on a ledger</span></div>
@@ -50,8 +50,8 @@ export default function LoginPage() {
     <h2>{mode === "sign-in" ? "Pick up where your money left off." : "Build a clearer household picture."}</h2>
     <p className="muted">{mode === "sign-in" ? "Sign in to your private finance workspace." : "Create your account, then name your household."}</p>
     <form className="form-grid auth-form" onSubmit={submit}>
-      <label>Email<input required maxLength={254} type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-      <label>Password<input required minLength={12} maxLength={128} type="password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+      <label>Email<input name="email" required maxLength={254} type="email" inputMode="email" autoComplete="email" spellCheck={false} placeholder="you@example.com…" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+      <label>Password<input name="password" required minLength={12} maxLength={128} type="password" autoComplete={mode === "sign-in" ? "current-password" : "new-password"} placeholder="12 characters or more…" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
       {message && <p className="form-note" role="status">{message}</p>}
       <button className="submit-button" disabled={submitting}>{submitting ? "Working…" : mode === "sign-in" ? "Sign in" : "Create account"}</button>
     </form>

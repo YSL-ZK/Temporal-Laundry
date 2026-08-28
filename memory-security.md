@@ -4,12 +4,12 @@
 > Last updated: never
 
 ## Project Profile
-- detected_stacks: []
-- deployment_platforms: []
-- databases: []
+- detected_stacks: [Next.js 16, React 19, TypeScript, pnpm]
+- deployment_platforms: [Vercel]
+- databases: [Supabase Postgres]
 - has_ai_features: false
 - compliance_mode: none  # none | gdpr | hipaa | pci-dss | soc2
-- environment: unknown   # dev | staging | prod
+- environment: prod   # dev | staging | prod
 
 ## User Preferences
 - ask_before_modify: true        # Always ask before modifying existing files
@@ -67,3 +67,5 @@ secrets: {}
 - 2026-08-28: Added a service-role-only shopping checkout function. It re-checks actor/list/account/category access, rate-limits checkout attempts, calculates line and list adjustments server-side, posts a balanced expense atomically, and retains transaction line items while removing only purchased shopping-list rows. Supabase database lint passes.
 - 2026-08-28: Added service-role-only plan workflow functions for recurring confirmation, goal allocation, debt payment, and budget envelopes. Each locks the target record, re-checks household and private/shared access, and posts any ledger change atomically. Remote schema lint passes. The only current Security Advisor warning is leaked-password protection, which Supabase documents as unavailable on the Free plan; the Performance Advisor reports an existing duplicate-permissive-policy optimization for household membership reads.
 - 2026-08-28: Added an explicit authenticated sign-out control using the browser-safe Supabase client with local-session scope. UI review found no new secret exposure, raw HTML/code execution, or preview-route bypass; lint, TypeScript, unit tests, and the production build pass.
+- 2026-08-28: Added a deliberately narrow PWA service worker. It never caches navigation responses or household/API data, only same-origin versioned static assets and a non-sensitive offline page; registration requires a production secure context.
+- 2026-08-28: Added an authenticated, RLS-scoped transaction CSV export with a 5,000-row bound, private/no-store response headers, fixed filenames, and spreadsheet-formula injection protection. Regression tests cover escaping. Dependency audit reports zero known vulnerabilities.

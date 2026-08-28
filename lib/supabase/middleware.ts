@@ -29,9 +29,11 @@ export async function updateSession(request: NextRequest) {
   const isLogin = pathname === "/login";
   const isOnboarding = pathname === "/onboarding";
   const isAuthCallback = pathname === "/auth/callback";
+  const isPublicAsset = pathname === "/sw.js" || pathname === "/manifest.webmanifest" || pathname === "/robots.txt" || pathname === "/sitemap.xml" || pathname === "/icon" || pathname === "/apple-icon" || pathname === "/opengraph-image" || pathname.startsWith("/pwa-icon/");
+  const isOffline = pathname === "/offline";
 
   // The confirmation-code exchange must be reachable before a session exists.
-  if (isAuthCallback) return response;
+  if (isAuthCallback || isPublicAsset || isOffline) return response;
 
   if (!signedIn && !isLogin) {
     const url = request.nextUrl.clone();
