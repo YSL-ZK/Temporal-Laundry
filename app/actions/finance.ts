@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 import { createAdminClient } from "../../lib/supabase/admin";
 import { createClient } from "../../lib/supabase/server";
 import type { DashboardData } from "../../lib/dashboard";
@@ -16,15 +17,19 @@ async function authenticatedClient() {
   return { supabase, user };
 }
 
-function actionError(error: unknown): { error: string } {
+function actionError(error: unknown, validationMessage = "Check the required fields and try again."): { error: string } {
   const diagnostic = typeof error === "object" && error !== null
     ? { name: "name" in error ? String(error.name) : "Error", code: "code" in error ? String(error.code) : undefined }
     : { name: "Error" };
   console.error("finance action failed", diagnostic);
   const message = typeof error === "object" && error !== null && "message" in error ? String(error.message).toLowerCase() : "";
+  if (error instanceof ZodError) return { error: validationMessage };
   if (message.includes("invalid api key") || message.includes("server-side finance operations") || message.includes("supabase browser connection")) {
     return { error: "This deployment is not connected to Supabase correctly. Its administrator must add a valid server secret in Vercel and redeploy." };
   }
+  if (message.includes("category access denied")) return { error: "Choose a category that matches the movement type." };
+  if (message.includes("invalid transaction values")) return { error: "Enter a positive amount, a valid currency, exchange rate, and date." };
+  if (message.includes("source account access denied")) return { error: "Choose an account you are allowed to use." };
   return { error: "We couldn't complete that request. Please try again." };
 }
 
@@ -97,7 +102,7 @@ export async function postTransaction(input: unknown): Promise<ActionResult<{ id
     if (error || !data) throw error ?? new Error("Transaction was not posted");
     revalidatePath("/");
     return { data: { id: data } };
-  } catch (error) { return actionError(error); }
+  } catch (error) { return actionError(error, "Check the amount, currency, exchange rate, date, and required fields."); }
 }
 
 export async function createPayee(input: unknown): Promise<ActionResult<{ id: string }>> {

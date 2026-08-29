@@ -4,6 +4,7 @@ import { debtPayoffMonths, formula, shoppingTotals, type ShoppingList } from "..
 import { csvCell, csvRow } from "../lib/csv";
 import { buildFinanceSnapshot, checkFinanceQuestion, financeChatRequestSchema, normalizeAssistantText } from "../lib/finance-ai";
 import { localeFor, translate } from "../lib/i18n";
+import { buildCurrencyOptions } from "../lib/currencies";
 import { tagSchema, transactionSchema, transactionSearchSchema } from "../lib/validation";
 import type { DashboardData } from "../lib/dashboard";
 
@@ -84,6 +85,28 @@ test("transaction organization validates reusable payees and bounded tags", () =
   assert.equal(transactionSchema.safeParse({ ...base, tagIds: Array.from({ length: 13 }, (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`) }).success, false);
   assert.equal(tagSchema.safeParse({ householdId: base.householdId, name: "Reimbursable", color: "#7dd3a7" }).success, true);
   assert.equal(tagSchema.safeParse({ householdId: base.householdId, name: "Bad", color: "mint" }).success, false);
+});
+
+test("foreign-currency income accepts a positive reporting exchange rate", () => {
+  const result = transactionSchema.safeParse({
+    householdId: "11111111-1111-4111-8111-111111111111",
+    accountId: "22222222-2222-4222-8222-222222222222",
+    kind: "income",
+    amount: 100,
+    currency: "USD",
+    reportingExchangeRate: 4_000,
+    occurredOn: "2026-08-29",
+    visibility: "private",
+    items: [],
+  });
+  assert.equal(result.success, true);
+});
+
+test("currency choices preserve household currencies and remove invalid duplicates", () => {
+  const options = buildCurrencyOptions("es-CO", ["cop", " USD ", "COP", "bad-code"]);
+  assert.deepEqual(options.slice(0, 2).map((option) => option.value), ["COP", "USD"]);
+  assert.equal(options.filter((option) => option.value === "COP").length, 1);
+  assert.equal(options.some((option) => option.value === "bad-code"), false);
 });
 
 test("ledger filters reject inverted date and amount ranges", () => {
