@@ -21,13 +21,13 @@ test.describe.serial("authenticated finance workspace", () => {
     test.skip(testInfo.project.name !== "desktop-chromium", "Desktop navigation contract");
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Your Money, in Motion." })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Post Transaction/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Post Transaction/i }).filter({ visible: true })).toBeVisible();
     await openWorkspace(page, "Accounts");
-    await expect(page.getByRole("button", { name: /Add Account/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Add Account/i }).filter({ visible: true })).toBeVisible();
     await openWorkspace(page, "Plans");
-    await expect(page.getByRole("button", { name: /Create Plan/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Create Plan/i }).filter({ visible: true })).toBeVisible();
     await openWorkspace(page, "Shopping");
-    await expect(page.getByRole("button", { name: /New List/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /New List/i }).filter({ visible: true })).toBeVisible();
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(results.violations).toEqual([]);
   });
