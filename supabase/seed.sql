@@ -1,0 +1,1 @@
+-- Intentionally empty. Browser tests create and remove their own localhost-only fixture.

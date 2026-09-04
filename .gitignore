@@ -4,6 +4,11 @@ node_modules
 coverage
 .pnpm-store
 *.tsbuildinfo
+*.log
+test-results/
+playwright-report/
+blob-report/
+tests/e2e/.auth/
 
 # === Added by security-skill ===
 .env

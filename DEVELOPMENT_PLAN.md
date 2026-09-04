@@ -73,6 +73,7 @@ The assistant is intentionally not a general agent. Users cannot choose arbitrar
 
 ## Quality and release
 
+- [x] Add a localhost-only Playwright/axe harness, public auth/PWA checks, and CI-isolated authenticated account, FX-income, contextual-action, and mobile-navigation tests.
 - [x] Add Supabase integration tests for every RLS boundary and privileged RPC.
 - [ ] Add browser tests for authentication, dashboard, operations, assistant, shopping checkout, calendar, reports, responsive layouts, and accessibility.
 - [ ] Add structured, privacy-safe monitoring for failed mutations, quota denial, and provider availability without logging finance prompts.

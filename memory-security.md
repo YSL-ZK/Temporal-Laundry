@@ -163,3 +163,9 @@ secrets: {}
 - The linked-project command completed 22/22 tests successfully without retaining fixture data. A secret-free GitHub Actions workflow now recreates local Postgres from committed migrations and runs the same suites.
 - Existing GitHub Actions dependencies were pinned to the immutable commits currently referenced by their official v4 tags. Workflow permissions remain read-only.
 - A first local Postgres image download was stopped after Docker stalled while extracting large layers; this did not affect the successful linked-project tests and left no application process running.
+
+## 2026-09-04 — Browser-test security boundary
+
+- Added Playwright and axe checks for public authentication, password guidance, PWA metadata, WCAG A/AA findings, responsive reflow, contextual dashboard actions, foreign-currency income, and mobile return navigation.
+- Authenticated fixtures are restricted in code to localhost URLs. The setup refuses hosted Supabase/app endpoints, creates a confirmed local-only user, seeds local FX values without calling external providers, and removes the fixture after the run.
+- GitHub Actions recreates the full Supabase stack from committed migrations with read-only repository permissions. Local public browser tests pass 8/8; the authenticated suite is delegated to Linux CI because Docker Desktop stalled while pulling the local Supabase images.

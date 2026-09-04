@@ -7,8 +7,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint app lib tests proxy.ts next.config.ts",
+    "lint": "eslint app lib tests proxy.ts next.config.ts playwright.config.ts",
     "test": "node --import ./tests/node-userinfo-fallback.mjs --import tsx --test tests/*.test.ts",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "test:e2e:install": "playwright install chromium",
     "test:db": "supabase test db --local",
     "test:db:linked": "supabase test db --linked"
   },
@@ -22,6 +24,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
