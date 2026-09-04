@@ -34,25 +34,26 @@ test.describe.serial("authenticated finance workspace", () => {
 
   test("creates an account and posts foreign-currency income", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium", "Mutations run once against the shared local fixture");
+    const accountName = `USD Wallet ${testInfo.retry + 1}`;
     await page.goto("/");
     await openWorkspace(page, "Accounts");
     const accountForm = page.locator("#account-form form");
-    await accountForm.getByLabel("Name").fill("USD Wallet");
+    await accountForm.getByLabel("Name").fill(accountName);
     await choose(page, "Currency", "USD");
     await accountForm.getByLabel("Opening balance").fill("100");
     await accountForm.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByRole("status")).toContainText("Saved");
-    await expect(page.getByText("USD Wallet", { exact: true })).toBeVisible();
+    await expect(page.getByRole("article").getByText(accountName, { exact: true }).first()).toBeVisible();
 
     await openWorkspace(page, "Activity");
     await choose(page, "Type", "Income");
-    await choose(page, "Account", "USD Wallet");
+    await choose(page, "Account", accountName);
     await choose(page, "Category", "Salary");
     const entry = page.locator("#transaction-form form");
     await entry.getByLabel("Amount").fill("25");
     await entry.getByRole("button", { name: "Post transaction" }).click();
     await expect(page.getByRole("status")).toContainText("Transaction posted");
-    await expect(page.getByText(/USD Wallet/).first()).toBeVisible();
+    await expect(page.getByText(accountName, { exact: false }).first()).toBeVisible();
   });
 
   test("keeps navigation and content inside a narrow mobile viewport", async ({ page }, testInfo) => {
