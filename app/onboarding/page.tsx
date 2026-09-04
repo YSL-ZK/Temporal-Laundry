@@ -36,7 +36,7 @@ export default function OnboardingPage() {
     <p className="muted">Start simple. You can create accounts, lists, and invitations next.</p>
     <form className="form-grid auth-form" onSubmit={submit}>
       <label>Household name<input name="householdName" required autoComplete="off" maxLength={80} value={name} onChange={(event) => setName(event.target.value)} placeholder="For example, Alex + Jules…" /></label>
-      <label>Reporting currency<select name="reportingCurrency" autoComplete="off" value={currency} onChange={(event) => setCurrency(event.target.value)}><option>USD</option><option>EUR</option><option>COP</option><option>GBP</option></select></label>
+      <label>Reporting currency<select name="reportingCurrency" autoComplete="off" value={currency} onChange={(event) => setCurrency(event.target.value)}><option>COP</option><option>USD</option><option>EUR</option></select></label>
       <label>Default shopping tax rate (%)<input name="defaultTaxRate" required autoComplete="off" inputMode="decimal" min="0" max="100" step="0.01" type="number" value={taxRate} onChange={(event) => setTaxRate(event.target.value)} /></label>
       {message && <p className="form-note" role="alert">{message}</p>}
       <button className="submit-button" disabled={submitting}>{submitting ? "Creating…" : "Create household"}</button>

@@ -43,35 +43,37 @@ The assistant is intentionally not a general agent. Users cannot choose arbitrar
 
 ### Category workflows and templates
 
-- [ ] Finish dedicated Bills, Transport, Dining, Health, and Travel entry experiences.
-- [ ] Build the category-template editor for text, numeric, currency, date, checkbox, select, multi-select, and list fields.
-- [ ] Connect the existing safe formula engine to template defaults, reviewed amount prefills, options, required fields, and display order.
+- [x] Finish dedicated Bills, Transport, Dining, Health, and Travel entry experiences.
+- [x] Build the category-template editor for text, numeric, currency, date, checkbox, select, multi-select, and list fields.
+- [x] Connect the existing safe formula engine to template defaults, reviewed amount prefills, options, required fields, and display order.
 
 ### Transactions and records
 
 - [x] Add payee and tag management plus transaction assignment.
 - [x] Add full search/filtering across dates, accounts, categories, payees, tags, amounts, visibility, and status.
-- [ ] Add receipt browser/download/delete UI with storage-policy integration.
-- [ ] Add transaction detail, edit/draft/reversal workflows while preserving posted-ledger audit history.
+- [x] Add receipt browser/download/delete UI with storage-policy integration.
+- [x] Add transaction detail with money path, historical conversion, itemized lines, receipts, and audit context.
+- [x] Add private drafts plus correction/reversal workflows while preserving posted-ledger audit history.
 - [x] Add creator-only expense voiding with immutable audit history and active-balance/report/export recalculation.
-- [ ] Build account reconciliation and statement discrepancy handling.
+- [x] Build account reconciliation and statement discrepancy handling.
 
 ### Cards, bills, and calendar
 
-- [ ] Complete statement balance, utilization, closing date, due date, payment-account, and card-payment interfaces.
-- [ ] Generate recurring occurrences without affecting posted balances until confirmation.
-- [ ] Build calendar, overdue indicators, duplicate-occurrence protection, and in-app reminder center.
+- [x] Complete statement balance, utilization, closing date, due date, payment-account, and card-payment interfaces.
+- [x] Generate recurring occurrences without affecting posted balances until confirmation.
+- [x] Build the due calendar, overdue indicators, and duplicate-occurrence protection.
+- [x] Add a dedicated in-app reminder center.
 
 ### Planning and analysis
 
-- [ ] Add full snowball/avalanche schedules with interest and payoff comparisons.
-- [ ] Expand budget reporting with envelope rollover decisions and monthly comparisons.
-- [ ] Expand goal forecasting and allocation history.
-- [ ] Add net-worth history, multi-currency converted reports, report filters, and additional CSV exports.
+- [x] Add full snowball/avalanche schedules with interest and payoff comparisons.
+- [x] Expand budget reporting with envelope rollover decisions and monthly comparisons.
+- [x] Expand goal forecasting and allocation history.
+- [x] Add net-worth history, multi-currency converted reports, report filters, and additional CSV exports.
 
 ## Quality and release
 
-- [ ] Add Supabase integration tests for every RLS boundary and privileged RPC.
+- [x] Add Supabase integration tests for every RLS boundary and privileged RPC.
 - [ ] Add browser tests for authentication, dashboard, operations, assistant, shopping checkout, calendar, reports, responsive layouts, and accessibility.
 - [ ] Add structured, privacy-safe monitoring for failed mutations, quota denial, and provider availability without logging finance prompts.
 - [ ] Configure production SMTP and a custom domain before public launch.

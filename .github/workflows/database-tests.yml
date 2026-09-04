@@ -1,18 +1,32 @@
-name: Verify
+name: Database security tests
 
 on:
   push:
     branches: [main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/database-tests.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     branches: [main]
+    paths:
+      - "supabase/**"
+      - ".github/workflows/database-tests.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
 
+concurrency:
+  group: database-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  verify:
+  pgtap:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
@@ -23,7 +37,5 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm exec tsc --noEmit
-      - run: pnpm test
-      - run: pnpm run build
+      - run: pnpm exec supabase db start
+      - run: pnpm run test:db

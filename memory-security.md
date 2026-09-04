@@ -76,3 +76,90 @@ secrets: {}
 - 2026-08-28: Applied migration 20260828100738 for persistent English/Spanish preferences and creator-only expense voiding. The void RPC is service-role-only, authenticates the actor again in PostgreSQL, locks and permits only the creator's active posted expense, rate-limits attempts, and retains an audit event instead of deleting ledger history. Active balances, reports, budget calculations, dashboard lists, and CSV exports exclude voided entries. Hosted function privileges were verified for anon/authenticated/service_role; Security Advisor still reports only the Free-plan leaked-password warning.
 - 2026-08-28: Applied migrations 20260828165639 and 20260828171454 for household payees, tags, transaction assignment, and parameterized ledger search. Browser roles have read-only RLS access to organizer records; rate-limited service-only RPCs create payees/tags and atomically post their assignments with audit events. Search uses a SECURITY INVOKER parameterized function so RLS remains active and user text is never interpolated into a PostgREST filter. The follow-up migration qualified all audit rate-limit columns, including creator-only expense voiding; linked Supabase database lint reports no schema errors.
 - 2026-08-28: Replaced oversized mobile OS category selection with an accessible Laundry choice dialog and progressively customized all remaining native selects. Custom triggers submit ordinary client-controlled values only; existing Zod validation and service-only/RLS database checks remain authoritative. Dialogs use native modal behavior, keyboard navigation, Escape dismissal, visible selection, and bounded scrolling without adding HTML injection or privileged browser APIs.
+- 2026-09-02: Added service-only daily COP/USD/EUR valuation storage and rate-limited account create/update/archive RPCs, with per-actor advisory locks and audit events. Datos Abiertos and ECB credentials remain server-only; the public cron endpoint requires a constant-time checked Vercel secret. A corrective migration qualified audit-event columns after linked lint found ambiguity. Both migrations are applied, remote database lint reports no schema errors, anonymous calls to the new mutation RPCs return 401, and local secret/artifact checks are clean. The Datos.gov token disclosed in chat must be rotated before production use.
+## 2026-09-02 — Card statements and recurring calendar
+
+- Added `card_statements` with RLS tied to household/private/shared access; authenticated users have read-only table access and all mutations go through server-only RPCs.
+- Added service-role-only functions for recording statements/payments and generating, confirming, or skipping recurring occurrences. `PUBLIC`, `anon`, and `authenticated` cannot execute them; an anonymous RPC probe returned PostgreSQL `42501` as expected.
+- Card payments now require the funding account to match the card's household, currency, visibility, and private owner. A database trigger enforces the same invariant when card settings change.
+- Shared recurring items cannot post against private accounts. Confirmation re-checks membership, scope, category kind, account currency, archived state, and uses the server-derived daily FX rate.
+- Recurring generation is idempotent through `(rule_id, due_on)` and projected occurrences do not affect ledger balances until explicit confirmation.
+- Remote migration `20260902163702_card_statements_and_recurring_calendar.sql` applied successfully; `supabase db lint --linked --level error` returned no schema errors.
+
+## 2026-09-02 — Receipt vault and account reconciliation
+
+- Replaced direct authenticated receipt writes with service-role-only RPCs that re-check the signed-in actor, transaction scope, file path, MIME type, size, per-transaction limit, and upload rate limit. Authenticated users retain RLS-scoped read access only.
+- Added private receipt download through an authenticated, no-store server route. Uploads verify file signatures before Storage, and creator-only deletion soft-deletes metadata, removes the private object, and restores metadata if Storage deletion fails.
+- Added service-role-only account reconciliation with account locking, RLS-equivalent actor/scope checks, immutable statement-versus-ledger snapshots, matched-entry tracking, private audit events, and an explicit optional ledger adjustment.
+- Corrected historical FX behavior so a current provider quote is never stored as if it belonged to a past transaction date; historical valuation uses an exact or earlier stored rate and only the current date may trigger a provider refresh.
+- Applied `20260902170915_receipt_reconciliation_workflows.sql` to the linked project. Remote database lint passed, browser roles have no mutation RPC execution or receipt/reconciliation table-write privileges, and a rollback-only smoke test executed both new workflows successfully without retaining test data.
+
+## 2026-09-02 — In-app reminder center
+
+- Added a read-only reminder center derived exclusively from the current user's RLS-authorized recurring occurrences, card statements, debts, and monthly debt-payment rows. Reminder data is not copied into local storage, browser notifications, logs, or a second database table.
+- Debt reminders account for payments already recorded during the current month before classifying an obligation as due or overdue. The UI routes users back to the existing secured Accounts or Plans workflow for mutations.
+- Applied `20260902203038_reminder_debt_payment_index.sql` to add bounded query and foreign-key lookup indexes. The linked database reports both indexes present and `supabase db lint --linked --level error` reports no schema errors.
+
+## 2026-09-02 — Goal forecasting and allocation history
+
+- Goal forecasts use only RLS-authorized allocation rows from the previous year and remain read-only client calculations; no financial mutations or private data are copied to browser persistence.
+- Forecasts explicitly report insufficient history instead of inventing a completion date, and compare observed monthly pace against the target-date pace when available.
+- Applied `20260902204254_goal_allocation_history_index.sql`. Both goal-allocation indexes are present in the linked database and remote schema lint reports no errors.
+
+## 2026-09-02 — Budget comparisons and rollover decisions
+
+- Added explicit reset, surplus-only, and signed-balance rollover decisions for closed monthly budgets. The source result includes incoming rollover and uses household/private visibility when deriving spend.
+- Rollover is atomic and idempotent per source budget, uses an advisory transaction lock, rate-limits mutation attempts, creates or updates the next monthly budget, copies envelope structure when needed, and records an audit event.
+- Authenticated clients have RLS-scoped read access to rollover records but no direct table-write or RPC execution permission. The server-only RPC re-checks the actor, household membership, owner, scope, and month before mutating data.
+- Applied `20260902212000_budget_rollovers.sql` to the linked project. A rollback-only workflow smoke test passed, role privileges were verified explicitly, and remote database lint reports no schema errors.
+
+## 2026-09-03 — Transaction detail boundary
+
+- Added a read-only transaction detail surface using the signed-in user's existing RLS-scoped transaction, item, tag, and receipt access. It exposes no new mutation route, browser credential, or cross-household query.
+- Expanded the bounded dashboard and ledger-search projections to include source/destination accounts, historical reporting rate, note, itemized lines, ownership state, and creation time. A direct read-only query against the linked Supabase project verified every relationship name and projection.
+- Replaced the remaining native ledger-filter selects with the existing accessible choice-dialog component; submitted values remain untrusted and pass through the established Zod schemas and RLS filters.
+
+## 2026-09-03 — Draft and immutable correction boundary
+
+- Added an owner-private `transaction_drafts` model. Browser roles receive RLS-scoped read access only; every create, update, delete, and publish operation is performed by a server-only RPC that re-checks actor membership, account ownership/scope, currency, category, payee, tags, limits, and dates.
+- Drafts never create ledger entries or affect balances. Publishing locks and consumes the draft atomically, then delegates to the hardened organized-transaction posting path.
+- Posted movements remain immutable. Eligible creator-owned manual movements can be corrected only by posting a replacement and voiding the superseded record, or reversed by soft-voiding with a mandatory reason. Itemized, shopping, recurring, debt/card, transfer, and reconciled records remain controlled by their source workflows.
+- Added transaction-scope enforcement at the database boundary so account household, owner, currency, visibility, category, and transfer destination must remain consistent even when a privileged server mutation is malformed. Posting and correction operations use per-actor advisory locks and bounded rates.
+- Remote application, privilege verification, rollback-only workflow tests, and database lint remain pending because the CLI approval service returned an unrelated 404 before the dry-run connection was established.
+
+## 2026-09-03 — Draft/correction deployment verification
+
+- Applied `20260903144243_transaction_drafts_and_corrections.sql` to the linked project after a clean dry-run. The first remote lint exposed ambiguous `actor_id` references in three PL/pgSQL rate-limit queries; fixed them without rewriting history through additive migration `20260903153509_disambiguate_transaction_actor_rate_limits.sql`.
+- Remote database lint then returned no schema errors. A rollback-only smoke test passed owner RLS visibility, unrelated-user isolation, draft publication, ledger-entry creation, immutable correction linkage, reversal reasons, browser-role table privileges, browser-role RPC denial, and RLS enablement; the transaction retained no test data.
+- Removed the Performance Advisor's duplicate membership SELECT-policy warning through additive migration `20260903154319_split_household_membership_write_policies.sql`, splitting owner writes into INSERT/UPDATE/DELETE while owner reads continue through membership access. Performance Advisor now reports no issues.
+- Security Advisor reports only `auth_leaked_password_protection`, which Supabase currently reserves for Pro plans and above. It cannot be cleared in this Free project through SQL; retain the existing strong-password UI and enable the hosted protection before a public launch or after upgrading.
+- Local and remote migration histories match through `20260903154319`. A later redundant lint invocation hit a Supabase CLI temporary-role authentication error after the earlier clean lint; migration listing, database smoke tests, and both Advisors remained reachable and successful.
+
+## 2026-09-03 — Guided category workflow deployment
+
+- Applied `20260903190558_category_workflow_transactions.sql` to the linked Supabase project. The server-only RPC posts Bills, Transport, Dining, Health, and Travel expenses atomically through the existing ledger function, then stores only a bounded, allowlisted metadata shape.
+- Browser roles have no execute privilege on the workflow RPC. Actor membership, account/category access, private/shared scope, currency, payee, tags, and optional recurring-rule ownership are rechecked at the database boundary.
+- A rollback-only remote smoke test posted and inspected all five workflow types and their ledger entries without retaining test data. Remote database lint reports no schema errors; Performance Advisor reports no issues.
+- Security Advisor continues to report only `auth_leaked_password_protection`. This Auth setting is unavailable on the linked Free plan and cannot be remediated by SQL; revisit it when upgrading to Supabase Pro.
+
+## 2026-09-03 — Custom template security boundary
+
+- Applied `20260903192325_custom_category_templates.sql`. Authenticated/anonymous roles retain RLS-scoped reads but cannot write template tables or execute template mutation/posting RPCs directly.
+- The server-only save path bounds template size, field count, keys, labels, types, defaults, option lists, formulas, and the single reviewed-amount prefill. Formulas are parsed without arbitrary code and may reference only earlier numeric fields, preventing cycles and undeclared data dependencies.
+- Posting reloads the authorized template under the signed-in user's RLS context, discards client formula results, recalculates them server-side, then passes a reduced value map to an atomic database function. The database rejects unknown keys and invalid required/text/date/boolean/numeric/select/multi-select/list values before posting the ledger entry.
+- A rollback-only remote smoke test created, versioned, used, privilege-checked, and deleted a template without retaining data. Remote database lint reports no schema errors and Performance Advisor reports no issues; Security Advisor remains limited to the Free-plan leaked-password warning.
+
+## 2026-09-03 — Historical reports and protected exports
+
+- Applied `20260903195044_finance_report_history_and_export_limits.sql`. Accounts and debts now have a conservative tracking-start date so charts do not present balances before Laundry has evidence that the position existed.
+- Added a service-role-only export reservation RPC with per-user and per-household five-minute quotas. It re-checks the actor profile and membership, stores only private export metadata, and cannot be executed by `PUBLIC`, `anon`, or `authenticated`.
+- Report calculations use RLS-authorized DTOs, retain transaction-date reporting rates, and convert COP/USD/EUR only for presentation. CSV responses are authenticated, bounded, private/no-store, protected from spreadsheet formula injection, and include `nosniff`.
+- Remote database lint and Performance Advisor report no issues. A public-key RPC probe was denied with 401 while a service-key probe reached the internal actor authorization check, confirming the intended privilege boundary. Security Advisor remains limited to the Free-plan leaked-password warning.
+
+## 2026-09-03 — Repeatable Supabase authorization tests
+
+- Added rollback-only pgTAP suites for database-wide RLS enablement, browser-role grants, private-schema isolation, receipt-bucket constraints, and all 38 service-only finance RPC names.
+- Added a 3-user/2-household authorization matrix spanning 32 public entities. It verifies owner, member, unrelated-household, and anonymous visibility; nested ledger/planning/shopping/receipt boundaries; owner-only administration; and allowed versus forged private-list writes.
+- The linked-project command completed 22/22 tests successfully without retaining fixture data. A secret-free GitHub Actions workflow now recreates local Postgres from committed migrations and runs the same suites.
+- Existing GitHub Actions dependencies were pinned to the immutable commits currently referenced by their official v4 tags. Workflow permissions remain read-only.
+- A first local Postgres image download was stopped after Docker stalled while extracting large layers; this did not affect the successful linked-project tests and left no application process running.

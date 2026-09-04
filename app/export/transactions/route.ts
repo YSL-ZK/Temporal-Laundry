@@ -1,22 +1,19 @@
-import { createClient } from "../../../lib/supabase/server";
 import { csvRow } from "../../../lib/csv";
+import { privateCsvHeaders, reserveFinanceExport } from "../../../lib/finance-exports";
 
 export const dynamic = "force-dynamic";
 
 const exportLimit = 5_000;
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return new Response("Authentication required", { status: 401 });
-
-  const { data: membership } = await supabase.from("household_members").select("household_id").limit(1).maybeSingle();
-  if (!membership) return new Response("Household membership required", { status: 403 });
+  const reservation = await reserveFinanceExport("transactions");
+  if (!reservation.ok) return new Response(reservation.message, { status: reservation.status });
+  const { supabase, householdId } = reservation;
 
   const { data, error } = await supabase
     .from("transactions")
     .select("occurred_on,kind,status,amount,currency,reporting_exchange_rate,payee,note,visibility,accounts(name),categories(name)")
-    .eq("household_id", membership.household_id)
+    .eq("household_id", householdId)
     .is("voided_at", null)
     .order("occurred_on", { ascending: false })
     .order("created_at", { ascending: false })
@@ -35,11 +32,6 @@ export async function GET() {
   const filename = `laundry-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new Response(csv, {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      "Cache-Control": "private, no-store, max-age=0",
-      "X-Export-Row-Limit": String(exportLimit),
-    },
+    headers: privateCsvHeaders(filename, exportLimit),
   });
 }

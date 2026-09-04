@@ -99,6 +99,23 @@ export function accountBalance(account: Account, transactions: Transaction[]) {
     }, account.balance);
 }
 
+export function formulaReferences(expression: string) {
+  const references = new Set<string>();
+  const source = expression.trim();
+  const tokenPattern = /\s*(\d+(?:\.\d+)?|[A-Za-z_][A-Za-z0-9_]*|>=|<=|==|!=|[()+\-*/%,<>])/gy;
+  let offset = 0;
+  while (offset < source.length) {
+    tokenPattern.lastIndex = offset;
+    const match = tokenPattern.exec(source);
+    if (!match) return null;
+    const token = match[1];
+    if (/^[A-Za-z_]/.test(token) && token !== "round" && token !== "if") references.add(token);
+    offset = tokenPattern.lastIndex;
+  }
+  const values = Object.fromEntries([...references].map((reference) => [reference, 1]));
+  return formula(source, values) === null ? null : [...references];
+}
+
 export function formula(expression: string, values: Record<string, number>) {
   type Token = number | string;
   const tokens: Token[] = [];

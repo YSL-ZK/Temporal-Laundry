@@ -15,6 +15,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   typedRoutes: true,
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "11mb",
+    },
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
