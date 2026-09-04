@@ -38,7 +38,7 @@ test.describe.serial("authenticated finance workspace", () => {
     await openWorkspace(page, "Accounts");
     const accountForm = page.locator("#account-form form");
     await accountForm.getByLabel("Name").fill("USD Wallet");
-    await choose(page, "Currency", "US Dollar");
+    await choose(page, "Currency", "USD");
     await accountForm.getByLabel("Opening balance").fill("100");
     await accountForm.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByRole("status")).toContainText("Saved");
