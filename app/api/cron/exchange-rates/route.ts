@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { refreshDailyExchangeRates } from "../../../../lib/exchange-rates";
+import { logBackgroundFailure } from "../../../../lib/monitoring";
 import { createAdminClient } from "../../../../lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
     if (occurrences.error) throw occurrences.error;
     return Response.json({ ok: true, valuationDate: rates.valuationDate, observedOn: rates.observedOn, occurrencesCreated: occurrences.data ?? 0 });
   } catch (error) {
-    console.error("scheduled exchange-rate refresh failed", { name: error instanceof Error ? error.name : "Error" });
+    logBackgroundFailure("exchange_rate_refresh", error);
     return Response.json({ error: "Exchange-rate refresh failed" }, { status: 502 });
   }
 }

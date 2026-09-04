@@ -169,3 +169,10 @@ secrets: {}
 - Added Playwright and axe checks for public authentication, password guidance, PWA metadata, WCAG A/AA findings, responsive reflow, contextual dashboard actions, foreign-currency income, and mobile return navigation.
 - Authenticated fixtures are restricted in code to localhost URLs. The setup refuses hosted Supabase/app endpoints, creates a confirmed local-only user, seeds local FX values without calling external providers, and removes the fixture after the run.
 - GitHub Actions recreates the full Supabase stack from committed migrations with read-only repository permissions. Local public browser tests pass 8/8; the authenticated suite is delegated to Linux CI because Docker Desktop stalled while pulling the local Supabase images.
+
+## 2026-09-04 — Privacy-safe operational monitoring
+
+- Server-side mutation, background-job, assistant-quota, and AI-provider failures now emit structured JSON events with fixed event names and allowlisted dimensions.
+- Operational logs never receive prompts, model responses, account or household identifiers, email addresses, receipt metadata, transaction values, or raw error messages.
+- Error names and codes are token-sanitized, and database quota reasons collapse to a fixed non-identifying enum before logging.
+- AI usage-record failures are observed without replacing a successful or safely handled provider response.

@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "./supabase/admin";
 import { parseDatosGovUsdCop, parseEcbUsdPerEur } from "./exchange-rate-utils";
 import type { CurrencyRates, SupportedCurrency } from "./money";
+import { logBackgroundFailure } from "./monitoring";
 
 type RateRow = {
   valuation_date: string;
@@ -92,9 +93,7 @@ export async function getDailyExchangeRates(date = bogotaDate()) {
     if (date === bogotaDate()) return await refreshDailyExchangeRates(date);
     return await readRates(date, false);
   } catch (error) {
-    console.error("daily exchange-rate refresh failed", {
-      name: error instanceof Error ? error.name : "Error",
-    });
+    logBackgroundFailure("exchange_rate_refresh", error);
     try {
       return await readRates(date, false);
     } catch {

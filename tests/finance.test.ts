@@ -10,6 +10,7 @@ import { buildCurrencyOptions } from "../lib/currencies";
 import { budgetRolloverAmount, compareBudgetSpend, nextBudgetMonth } from "../lib/budgets";
 import { parseDatosGovUsdCop, parseEcbUsdPerEur } from "../lib/exchange-rate-utils";
 import { convertMoney, currencyRate, formatMoney, netWorthFromPositions } from "../lib/money";
+import { classifyQuotaReason, safeOperationalError } from "../lib/monitoring-safe";
 import { cardUtilization, obligationState, statementRemaining } from "../lib/obligations";
 import { detectReceiptMime, formatFileSize, safeReceiptFilename } from "../lib/receipts";
 import { buildFinanceReminders } from "../lib/reminders";
@@ -22,6 +23,19 @@ const list: ShoppingList = { id: "list", name: "Test", scope: "shared", currency
   { id: "two", name: "Exempt", quantity: 1, estimatedPrice: 5, category: "Shopping", bought: true, taxRate: 0 },
   { id: "three", name: "Not bought", quantity: 1, estimatedPrice: 50, category: "Shopping", bought: false },
 ] };
+
+test("operational error metadata excludes messages and rejects unsafe tokens", () => {
+  const safe = safeOperationalError({ name: "PostgrestError", code: "PGRST116", message: "account=Private Wallet prompt=secret" });
+  assert.deepEqual(safe, { errorName: "PostgrestError", errorCode: "PGRST116" });
+  assert.equal(JSON.stringify(safe).includes("Private Wallet"), false);
+  assert.deepEqual(safeOperationalError({ name: "Injected name with spaces", code: "token=secret" }), { errorName: "Error" });
+});
+
+test("assistant quota reasons collapse to a non-identifying allowlist", () => {
+  assert.equal(classifyQuotaReason("AI user daily limit reached for private@example.com"), "user_daily");
+  assert.equal(classifyQuotaReason("AI household daily limit reached: household-secret"), "household_daily");
+  assert.equal(classifyQuotaReason("Unknown policy details with private data"), "policy");
+});
 
 test("shopping checkout calculates only purchased items and tax overrides", () => {
   assert.deepEqual(shoppingTotals(list), { subtotal: 25, tax: 2, discount: 4, total: 25, count: 2 });

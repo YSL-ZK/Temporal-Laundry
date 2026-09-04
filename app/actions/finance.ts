@@ -7,6 +7,7 @@ import { createClient } from "../../lib/supabase/server";
 import type { DashboardData } from "../../lib/dashboard";
 import { getDailyExchangeRates } from "../../lib/exchange-rates";
 import { currencyRate } from "../../lib/money";
+import { logBackgroundFailure, logMutationFailure } from "../../lib/monitoring";
 import { formula } from "../../lib/finance";
 import { detectReceiptMime, receiptExtension, safeReceiptFilename } from "../../lib/receipts";
 import { accountArchiveSchema, accountSchema, accountUpdateSchema, budgetEnvelopeSchema, budgetRolloverSchema, budgetSchema, cardPaymentSchema, cardStatementSchema, categorySchema, categoryTemplateDeleteSchema, categoryTemplateSchema, categoryWorkflowMetadataSchema, categoryWorkflowTransactionSchema, customTemplateMetadataSchema, debtPaymentSchema, debtSchema, goalAllocationSchema, goalSchema, householdSchema, invitationSchema, payeeSchema, profileLanguageSchema, receiptDeletionSchema, reconciliationSchema, recurringOccurrenceConfirmSchema, recurringOccurrenceSkipSchema, recurringSchema, shoppingCheckoutSchema, shoppingItemSchema, shoppingListSchema, tagSchema, templateTransactionSchema, transactionCorrectionSchema, transactionDraftIdSchema, transactionDraftSchema, transactionReversalSchema, transactionSchema, transactionSearchSchema, uuidSchema, voidExpenseSchema } from "../../lib/validation";
@@ -22,10 +23,7 @@ async function authenticatedClient() {
 }
 
 function actionError(error: unknown, validationMessage = "Check the required fields and try again."): { error: string } {
-  const diagnostic = typeof error === "object" && error !== null
-    ? { name: "name" in error ? String(error.name) : "Error", code: "code" in error ? String(error.code) : undefined }
-    : { name: "Error" };
-  console.error("finance action failed", diagnostic);
+  logMutationFailure(error);
   const message = typeof error === "object" && error !== null && "message" in error ? String(error.message).toLowerCase() : "";
   if (error instanceof ZodError) return { error: validationMessage };
   if (message.includes("invalid api key") || message.includes("server-side finance operations") || message.includes("supabase browser connection")) {
@@ -571,7 +569,7 @@ export async function createRecurringRule(input: unknown): Promise<ActionResult<
     if (error || !data) throw error ?? new Error("Recurring rule was not created");
     const through = new Date(); through.setUTCDate(through.getUTCDate() + 120);
     const generation = await createAdminClient().rpc("generate_recurring_occurrences", { target_through: through.toISOString().slice(0, 10) });
-    if (generation.error) console.error("recurring occurrence generation failed", { code: generation.error.code });
+    if (generation.error) logBackgroundFailure("recurring_occurrence_generation", generation.error);
     revalidatePath("/"); return { data };
   } catch (error) { return actionError(error); }
 }

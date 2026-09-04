@@ -4,6 +4,18 @@ import { normalizeAssistantText, type FinanceChatMessage } from "./finance-ai";
 const DEFAULT_MODEL = "openai/gpt-oss-20b";
 const FREE_MODEL_ALLOWLIST = new Set(["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]);
 
+export type GroqFailureKind = "provider_timeout" | "provider_http_error" | "provider_empty_response" | "provider_network_error";
+
+export class GroqError extends Error {
+  readonly kind: GroqFailureKind;
+
+  constructor(kind: GroqFailureKind) {
+    super("AI provider request failed");
+    this.name = "GroqError";
+    this.kind = kind;
+  }
+}
+
 export function getGroqConfig() {
   const apiKey = process.env.GROQ_API_KEY?.trim();
   const model = process.env.GROQ_MODEL?.trim() || DEFAULT_MODEL;
@@ -29,11 +41,15 @@ export async function askGroq({ apiKey, model }: { apiKey: string; model: string
       cache: "no-store",
       signal: controller.signal,
     });
-    if (!response.ok) throw new Error(`AI provider returned ${response.status}`);
+    if (!response.ok) throw new GroqError("provider_http_error");
     const payload = await response.json() as { choices?: Array<{ message?: { content?: unknown } }> };
     const answer = normalizeAssistantText(payload.choices?.[0]?.message?.content);
-    if (!answer) throw new Error("AI provider returned an empty response");
+    if (!answer) throw new GroqError("provider_empty_response");
     return answer;
+  } catch (error) {
+    if (error instanceof GroqError) throw error;
+    if (error instanceof Error && error.name === "AbortError") throw new GroqError("provider_timeout");
+    throw new GroqError("provider_network_error");
   } finally {
     clearTimeout(timeout);
   }
