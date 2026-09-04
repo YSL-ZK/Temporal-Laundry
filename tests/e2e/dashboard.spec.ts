@@ -52,7 +52,7 @@ test.describe.serial("authenticated finance workspace", () => {
     const entry = page.locator("#transaction-form form");
     await entry.getByLabel("Amount").fill("25");
     await entry.getByRole("button", { name: "Post transaction" }).click();
-    await expect(page.getByRole("status")).toContainText("Transaction posted");
+    await expect(page.getByText("Transaction posted.", { exact: true })).toBeVisible();
     await expect(page.getByText(accountName, { exact: false }).first()).toBeVisible();
   });
 
