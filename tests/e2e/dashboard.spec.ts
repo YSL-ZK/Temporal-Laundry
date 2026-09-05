@@ -53,7 +53,7 @@ test.describe.serial("authenticated finance workspace", () => {
     await entry.getByLabel("Amount").fill("25");
     await entry.getByRole("button", { name: "Post transaction" }).click();
     await expect(page.getByText("Transaction posted.", { exact: true })).toBeVisible();
-    await expect(page.getByText(accountName, { exact: false }).first()).toBeVisible();
+    await expect(page.locator(".ledger-results .ledger-result").filter({ hasText: accountName }).first()).toBeVisible();
   });
 
   test("checks out only purchased shopping lines and retains the rest", async ({ page }, testInfo) => {
@@ -113,7 +113,8 @@ test.describe.serial("authenticated finance workspace", () => {
     await expect(page.getByRole("heading", { name: "Ask Your Ledger." })).toBeVisible();
     await expect(page.getByText(/processed by Groq outside Supabase/i)).toBeVisible();
     await expect(page.getByText(/No emails, account names, payees, notes, receipt files/i)).toBeVisible();
-    await expect(page.getByLabel("Ask a finance question")).toBeDisabled();
+    await expect(page.getByText("Setup required", { exact: true })).toBeVisible();
+    await expect(page.locator("#finance-question")).toBeDisabled();
 
     const responses = await page.evaluate(async () => {
       const post = async (body: unknown) => {
