@@ -37,4 +37,15 @@ test.describe("public authentication shell", () => {
     expect(manifest).toMatchObject({ name: "Laundry", short_name: "Laundry", display: "standalone", start_url: "/" });
     expect(manifest.icons).toEqual(expect.arrayContaining([expect.objectContaining({ sizes: "192x192" }), expect.objectContaining({ sizes: "512x512" })]));
   });
+
+  test("blocks unauthenticated assistant requests before loading finance data", async ({ request }) => {
+    const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+    const response = await request.post("/api/finance-chat", {
+      headers: { "Content-Type": "application/json", Origin: new URL(baseURL).origin },
+      data: { messages: [{ role: "user", content: "Review my budget" }] },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(307);
+    expect(response.headers().location).toContain("/login?next=%2Fapi%2Ffinance-chat");
+  });
 });

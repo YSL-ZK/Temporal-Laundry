@@ -17,6 +17,9 @@ const serverEnv = {
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "local-e2e-publishable-key",
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "local-e2e-service-role-key",
   APP_URL: baseURL,
+  // Full-stack browser tests must never consume a developer or production
+  // provider key implicitly from .env.local. Opt in with a dedicated test key.
+  GROQ_API_KEY: process.env.E2E_GROQ_API_KEY ?? "",
 };
 
 let server;

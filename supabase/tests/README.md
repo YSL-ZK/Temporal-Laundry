@@ -27,6 +27,7 @@ The suites cover:
 - owner-only settings and invitation visibility;
 - immutable/server-managed table privileges;
 - every service-only finance RPC, pinned `search_path`, and browser-role denial;
+- assistant membership checks, burst/household/global quotas, UTC reset behavior, and immutable bounded completion metadata;
 - private receipt-bucket constraints and read-only object policies.
 
 No production keys are required by CI. GitHub starts an isolated local Postgres container and reapplies the committed migrations from scratch.
