@@ -20,7 +20,7 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
   const household = data.household;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [results, setResults] = useState(data.transactions);
+  const [results, setResults] = useState<DashboardData["transactions"] | null>(null);
   const [message, setMessage] = useState("");
   const [transactionKind, setTransactionKind] = useState<TransactionKind>("expense");
   const [accountId, setAccountId] = useState(data.accounts[0]?.id ?? "");
@@ -33,6 +33,7 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
   const [receiptToRemove, setReceiptToRemove] = useState<string | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<DashboardData["transactions"][number] | null>(null);
   const t = (copy: string) => translate(language, copy);
+  const displayedTransactions = results ?? data.transactions;
 
   if (!household) return null;
   const activeHousehold = household;
@@ -261,11 +262,11 @@ export function ActivityWorkspace({ data, language }: ActivityWorkspaceProps) {
           <label>{t("From")}<input name="dateFrom" type="date" /></label><label>{t("To")}<input name="dateTo" type="date" /></label>
           <label>{t("Minimum")}<input name="minAmount" inputMode="decimal" /></label><label>{t("Maximum")}<input name="maxAmount" inputMode="decimal" /></label>
         </div>
-        <div className="filter-actions"><button className="submit-button" disabled={pending}>{t("Apply filters")}</button><button type="reset" className="text-button" onClick={() => { setResults(data.transactions); setMessage(""); }}><X aria-hidden="true" />{t("Clear")}</button></div>
+        <div className="filter-actions"><button className="submit-button" disabled={pending}>{t("Apply filters")}</button><button type="reset" className="text-button" onClick={() => { setResults(null); setMessage(""); }}><X aria-hidden="true" />{t("Clear")}</button></div>
       </form>
       {message && <p className="form-message" role="status">{message}</p>}
       <div className="ledger-results" aria-live="polite">
-        {results.length ? results.map((transaction) => <article className="ledger-result" key={transaction.id}><div className="transaction-mark" data-kind={transaction.kind} aria-hidden="true" /><div className="grow"><strong>{transaction.payee ?? transaction.category ?? t(transaction.kind)}</strong><span>{new Intl.DateTimeFormat(localeFor(language), { dateStyle: "medium" }).format(new Date(`${transaction.occurredOn}T12:00:00`))} · {transaction.account ?? t("Account")} · {transaction.category ?? t("Uncategorized")}</span>{transaction.tags.length > 0 && <div className="transaction-tags">{transaction.tags.map((tag) => <span key={tag.id}><i style={{ backgroundColor: tag.color }} aria-hidden="true" />{tag.name}</span>)}</div>}</div><div className="result-amount"><strong className={transaction.kind === "income" ? "positive" : ""}>{transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : ""}{new Intl.NumberFormat(localeFor(language), { style: "currency", currency: transaction.currency, maximumFractionDigits: 0 }).format(transaction.amount)}</strong><small>{t(transaction.status)} · {t(transaction.visibility)}</small></div><button className="ledger-detail-button" type="button" onClick={() => setSelectedTransaction(transaction)} aria-label={`${t("Open movement details")}: ${transaction.payee ?? transaction.category ?? t(transaction.kind)}`}><Eye aria-hidden="true" /><span>{t("Details")}</span></button></article>) : <div className="empty-ledger"><MagnifyingGlass weight="duotone" aria-hidden="true" /><strong>{t("No movements match these filters.")}</strong><p>{t("Clear a filter or widen the date and amount range.")}</p></div>}
+        {displayedTransactions.length ? displayedTransactions.map((transaction) => <article className="ledger-result" key={transaction.id}><div className="transaction-mark" data-kind={transaction.kind} aria-hidden="true" /><div className="grow"><strong>{transaction.payee ?? transaction.category ?? t(transaction.kind)}</strong><span>{new Intl.DateTimeFormat(localeFor(language), { dateStyle: "medium" }).format(new Date(`${transaction.occurredOn}T12:00:00`))} · {transaction.account ?? t("Account")} · {transaction.category ?? t("Uncategorized")}</span>{transaction.tags.length > 0 && <div className="transaction-tags">{transaction.tags.map((tag) => <span key={tag.id}><i style={{ backgroundColor: tag.color }} aria-hidden="true" />{tag.name}</span>)}</div>}</div><div className="result-amount"><strong className={transaction.kind === "income" ? "positive" : ""}>{transaction.kind === "income" ? "+" : transaction.kind === "expense" ? "−" : ""}{new Intl.NumberFormat(localeFor(language), { style: "currency", currency: transaction.currency, maximumFractionDigits: 0 }).format(transaction.amount)}</strong><small>{t(transaction.status)} · {t(transaction.visibility)}</small></div><button className="ledger-detail-button" type="button" onClick={() => setSelectedTransaction(transaction)} aria-label={`${t("Open movement details")}: ${transaction.payee ?? transaction.category ?? t(transaction.kind)}`}><Eye aria-hidden="true" /><span>{t("Details")}</span></button></article>) : <div className="empty-ledger"><MagnifyingGlass weight="duotone" aria-hidden="true" /><strong>{t("No movements match these filters.")}</strong><p>{t("Clear a filter or widen the date and amount range.")}</p></div>}
       </div>
     </section>
     {selectedTransaction && <TransactionDetailDialog transaction={selectedTransaction} receipts={data.receipts.filter((receipt) => receipt.transactionId === selectedTransaction.id)} data={data} householdId={activeHousehold.id} reportingCurrency={activeHousehold.currency} language={language} onClose={() => setSelectedTransaction(null)} />}
